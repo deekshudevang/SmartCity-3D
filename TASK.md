@@ -65,7 +65,7 @@
 
 ---
 
-## Phase 3 | Status: VERIFIED | Date: 2026-11-10
+## Phase 3 | Status: VERIFIED | Date: 2026-11-10 | Commit: `b0a5c63`
 
 ### Requirement Table
 | ID | Requirement | Status | Evidence (file/command) |
