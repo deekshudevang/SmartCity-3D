@@ -1,0 +1,12 @@
+{
+  "name": "smartcity-3d",
+  "version-string": "1.0.0",
+  "description": "SmartCity 3D — Intelligent Traffic Intersection and Urban Environment Simulation",
+  "dependencies": [
+    "glfw3",
+    "glad",
+    "glm",
+    "imgui",
+    "stb"
+  ]
+}

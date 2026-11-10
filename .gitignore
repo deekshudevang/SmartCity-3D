@@ -1,0 +1,19 @@
+# Build directories
+build/
+bin/
+obj/
+out/
+.vs/
+*.user
+
+# Temporary and cache files
+CMakeSettings.json
+*.log
+*.tlog
+*.idb
+*.pdb
+
+# Dependencies artifacts
+external/glfw/build/
+vcpkg_installed/
+imgui.ini
