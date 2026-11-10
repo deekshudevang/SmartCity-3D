@@ -1,4 +1,4 @@
-# SmartCity 3D — Build Script
+# SmartCity 3D - Build Script
 param(
     [ValidateSet("Debug", "Release")]
     [string]$Config = "Debug",
@@ -40,8 +40,8 @@ try {
         $generator = "Ninja"
     }
 
-    Write-Host "Configuring CMake with generator '$generator'..." -ForegroundColor Cyan
-    cmake -B build -G $generator -DCMAKE_BUILD_TYPE=$Config
+    Write-Host "Configuring CMake with generator '$generator' and build type '$Config'..." -ForegroundColor Cyan
+    cmake -B build -G $generator "-DCMAKE_BUILD_TYPE=$Config"
     if ($LASTEXITCODE -ne 0) {
         throw "CMake configuration failed with exit code $LASTEXITCODE."
     }
@@ -56,4 +56,3 @@ try {
 } finally {
     Pop-Location
 }
-

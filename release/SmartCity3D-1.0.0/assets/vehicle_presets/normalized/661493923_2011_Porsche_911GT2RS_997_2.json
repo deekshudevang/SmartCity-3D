@@ -1,0 +1,303 @@
+{
+    "assetStatus": "MISSING_MODEL",
+    "baseFlags": 1073808655,
+    "category": "Unknown",
+    "contentHash": "de9dffff292e8405",
+    "displayName": "2011 Porsche 911GT2RS 997-2",
+    "extras": {
+        "extra0": false,
+        "extra1": false,
+        "extra10": false,
+        "extra11": false,
+        "extra12": false,
+        "extra13": false,
+        "extra14": false,
+        "extra15": false,
+        "extra2": false,
+        "extra3": false,
+        "extra4": false,
+        "extra5": false,
+        "extra6": false,
+        "extra7": false,
+        "extra8": false,
+        "extra9": false
+    },
+    "id": "661493923_2011_Porsche_911GT2RS_997_2",
+    "modelAssetReference": "",
+    "modelHash": 661493923,
+    "modelIdentifier": "661493923",
+    "mods": {
+        "mod0": {
+            "index": 5,
+            "variation": false
+        },
+        "mod1": {
+            "index": 0,
+            "variation": false
+        },
+        "mod10": {
+            "index": 1,
+            "variation": false
+        },
+        "mod11": {
+            "index": 4,
+            "variation": false
+        },
+        "mod12": {
+            "index": 3,
+            "variation": false
+        },
+        "mod13": {
+            "index": 3,
+            "variation": false
+        },
+        "mod14": {
+            "index": 1,
+            "variation": false
+        },
+        "mod15": {
+            "index": 3,
+            "variation": false
+        },
+        "mod16": {
+            "index": 5,
+            "variation": false
+        },
+        "mod17": {
+            "index": 0,
+            "variation": false
+        },
+        "mod18": {
+            "index": 1,
+            "variation": false
+        },
+        "mod19": {
+            "index": 0,
+            "variation": false
+        },
+        "mod2": {
+            "index": 1,
+            "variation": false
+        },
+        "mod20": {
+            "index": 1,
+            "variation": false
+        },
+        "mod21": {
+            "index": 0,
+            "variation": false
+        },
+        "mod22": {
+            "index": 3,
+            "variation": false
+        },
+        "mod23": {
+            "index": 10,
+            "variation": false
+        },
+        "mod24": {
+            "index": 0,
+            "variation": false
+        },
+        "mod25": {
+            "index": 0,
+            "variation": false
+        },
+        "mod26": {
+            "index": 0,
+            "variation": false
+        },
+        "mod27": {
+            "index": 0,
+            "variation": false
+        },
+        "mod28": {
+            "index": 0,
+            "variation": false
+        },
+        "mod29": {
+            "index": 0,
+            "variation": false
+        },
+        "mod3": {
+            "index": 3,
+            "variation": false
+        },
+        "mod30": {
+            "index": 0,
+            "variation": false
+        },
+        "mod31": {
+            "index": 0,
+            "variation": false
+        },
+        "mod32": {
+            "index": 0,
+            "variation": false
+        },
+        "mod33": {
+            "index": 0,
+            "variation": false
+        },
+        "mod34": {
+            "index": 0,
+            "variation": false
+        },
+        "mod35": {
+            "index": 0,
+            "variation": false
+        },
+        "mod36": {
+            "index": 0,
+            "variation": false
+        },
+        "mod37": {
+            "index": 0,
+            "variation": false
+        },
+        "mod38": {
+            "index": 0,
+            "variation": false
+        },
+        "mod39": {
+            "index": 0,
+            "variation": false
+        },
+        "mod4": {
+            "index": 4,
+            "variation": false
+        },
+        "mod40": {
+            "index": 0,
+            "variation": false
+        },
+        "mod41": {
+            "index": 0,
+            "variation": false
+        },
+        "mod42": {
+            "index": 0,
+            "variation": false
+        },
+        "mod43": {
+            "index": 0,
+            "variation": false
+        },
+        "mod44": {
+            "index": 0,
+            "variation": false
+        },
+        "mod45": {
+            "index": 0,
+            "variation": false
+        },
+        "mod46": {
+            "index": 0,
+            "variation": false
+        },
+        "mod47": {
+            "index": 0,
+            "variation": false
+        },
+        "mod48": {
+            "index": 0,
+            "variation": false
+        },
+        "mod49": {
+            "index": 0,
+            "variation": false
+        },
+        "mod5": {
+            "index": 0,
+            "variation": false
+        },
+        "mod6": {
+            "index": 0,
+            "variation": false
+        },
+        "mod7": {
+            "index": 2,
+            "variation": false
+        },
+        "mod8": {
+            "index": 0,
+            "variation": false
+        },
+        "mod9": {
+            "index": 0,
+            "variation": false
+        }
+    },
+    "neonConfiguration": {
+        "back": true,
+        "color": {
+            "b": 255,
+            "g": 21,
+            "r": 2
+        },
+        "front": true,
+        "hasNeon": true,
+        "left": true,
+        "right": true
+    },
+    "numberPlate": {
+        "styleIndex": 0,
+        "text": " 997 2  "
+    },
+    "paintConfiguration": {
+        "customPrimaryColor": {
+            "b": 0,
+            "g": 0,
+            "r": 0
+        },
+        "customSecondaryColor": {
+            "b": 0,
+            "g": 0,
+            "r": 0
+        },
+        "dashBoardColor": 65,
+        "interiorColor": 93,
+        "isPrimaryColorCustom": false,
+        "isSecondaryColorCustom": false,
+        "pearlescentColor": 0,
+        "primaryColor": 111,
+        "secondaryColor": 111,
+        "windowTint": 2
+    },
+    "schemaVersion": "1.0.0",
+    "simulationProfile": {
+        "comfortableDecel": 2.5,
+        "dimensions": {
+            "height": 1.399999976158142,
+            "length": 4.599999904632568,
+            "width": 1.7999999523162842
+        },
+        "maxAcceleration": 3.0,
+        "maxDeceleration": 8.0,
+        "maxSpeed": 15.0,
+        "minGap": 2.0
+    },
+    "sourceDirectory": "",
+    "sourceFile": "2011_Porsche_911GT2RS_997-2.json",
+    "sourceFormat": "Cherax Entity",
+    "unknownProperties": {
+        "_creatorSignature": "GallivanterBallerST"
+    },
+    "validationErrors": [],
+    "validationStatus": "WARNING",
+    "validationWarnings": [
+        "Preserving unknown property: _creatorSignature"
+    ],
+    "wheelConfiguration": {
+        "bulletproofTyres": true,
+        "driftTyres": false,
+        "hasTyreSettings": true,
+        "tyreSmokeColor": {
+            "b": 239,
+            "g": 174,
+            "r": 0
+        },
+        "wheelColor": 0,
+        "wheelType": 12
+    }
+}

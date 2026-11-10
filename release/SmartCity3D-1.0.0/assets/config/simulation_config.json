@@ -1,0 +1,37 @@
+{
+  "simulation": {
+    "random_seed": 1337,
+    "fixed_timestep_s": 0.0166666667,
+    "max_delta_time_s": 0.25
+  },
+  "traffic": {
+    "speed_limit_mps": 13.88,
+    "turning_speed_limit_mps": 5.55,
+    "idm_desired_velocity_mps": 13.88,
+    "idm_safe_time_headway_s": 1.2,
+    "idm_min_gap_distance_m": 2.0,
+    "idm_max_acceleration_mps2": 2.0,
+    "idm_comfortable_deceleration_mps2": 2.5,
+    "idm_delta_exponent": 4.0
+  },
+  "signals": {
+    "cycle_mode": "FixedTime",
+    "phase_green_time_s": 24.0,
+    "phase_yellow_clearance_s": 3.5,
+    "phase_all_red_clearance_s": 1.5,
+    "left_turn_green_time_s": 10.0,
+    "pedestrian_walk_time_s": 15.0,
+    "min_green_s": 7.0,
+    "max_green_s": 45.0
+  },
+  "demand": {
+    "north_spawn_rate_vpm": 18.0,
+    "south_spawn_rate_vpm": 18.0,
+    "east_spawn_rate_vpm": 14.0,
+    "west_spawn_rate_vpm": 14.0,
+    "sedan_ratio": 0.65,
+    "suv_ratio": 0.22,
+    "bus_ratio": 0.08,
+    "emergency_ratio": 0.05
+  }
+}

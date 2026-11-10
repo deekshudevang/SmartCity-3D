@@ -1,0 +1,17 @@
+{
+  "speed_min": 1.0,
+  "speed_max": 1.5,
+  "speed_mean": 1.25,
+  "waiting_buffer_distance": 0.5,
+  "bounding_radius": 0.3,
+  "spawning": {
+    "demand_per_crosswalk_per_hour": {
+      "CW_North": 180.0,
+      "CW_South": 180.0,
+      "CW_East": 140.0,
+      "CW_West": 140.0
+    },
+    "random_seed": 42
+  }
+}
+

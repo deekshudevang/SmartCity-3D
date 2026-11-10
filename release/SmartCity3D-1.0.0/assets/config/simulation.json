@@ -1,0 +1,29 @@
+{
+  "simulation": {
+    "dt": 0.0166666667,
+    "max_steps_per_frame": 5,
+    "speed_multiplier": 1.0,
+    "random_seed": 1337
+  },
+  "dynamics": {
+    "lateral_acceleration_limit_mps2": 2.8,
+    "yellow_dilemma_reaction_time_s": 1.0
+  },
+  "demand": {
+    "north_arrivals_per_hour": 720,
+    "south_arrivals_per_hour": 720,
+    "east_arrivals_per_hour": 540,
+    "west_arrivals_per_hour": 540,
+    "movement_split_percent": {
+      "left": 20.0,
+      "through": 65.0,
+      "right": 15.0
+    },
+    "type_mix_percent": {
+      "sedan": 75.0,
+      "bus": 15.0,
+      "ambulance": 10.0
+    }
+  }
+}
+

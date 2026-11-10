@@ -11,6 +11,11 @@ macro(add_smartcity_unit_test test_name test_source)
         "${CMAKE_CURRENT_SOURCE_DIR}/../external/glad/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../external/glm"
     )
+    if(MSVC)
+        target_compile_options(${test_name} PRIVATE /UNDEBUG)
+    else()
+        target_compile_options(${test_name} PRIVATE -UNDEBUG)
+    endif()
     add_test(NAME ${test_name} COMMAND ${test_name})
 endmacro()
 

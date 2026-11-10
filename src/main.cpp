@@ -12,6 +12,20 @@ int main(int argc, char* argv[]) {
             args.headless = true;
         } else if (arg == "--screenshots" || arg == "--phase6-screenshots") {
             args.screenshots = true;
+        } else if (arg == "--phase8-screenshots" || arg == "--release-screenshots") {
+            args.releaseScreenshots = true;
+        } else if (arg == "--benchmark") {
+            args.benchmark = true;
+        } else if (arg == "--benchmark-duration" && i + 1 < argc) {
+            args.benchmarkDuration = std::stof(argv[++i]);
+        } else if (arg == "--benchmark-vehicles" && i + 1 < argc) {
+            args.benchmarkVehicles = std::stoi(argv[++i]);
+        } else if (arg == "--no-shadows") {
+            args.noShadows = true;
+        } else if (arg == "--no-rain") {
+            args.noRain = true;
+        } else if (arg == "--demo") {
+            args.demoMode = true;
         } else if (arg == "--config" && i + 1 < argc) {
             args.configPath = argv[++i];
         } else if (arg == "--intersection" && i + 1 < argc) {

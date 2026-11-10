@@ -1,0 +1,11 @@
+{
+  "road_width_m": 14.0,
+  "approach_length_m": 80.0,
+  "sidewalk_width_m": 4.0,
+  "curb_height_m": 0.15,
+  "corner_radius_m": 6.0,
+  "stop_line_distance_m": 13.0,
+  "crosswalk_distance_m": 9.5,
+  "crosswalk_width_m": 3.0,
+  "num_lanes_per_approach": 4
+}

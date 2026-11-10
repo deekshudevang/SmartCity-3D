@@ -19,4 +19,6 @@ external/assimp/
 vcpkg_installed/
 imgui.ini
 /Vehicles/
-logs/
+logs/*
+!logs/phase8/
+!logs/phase8/**

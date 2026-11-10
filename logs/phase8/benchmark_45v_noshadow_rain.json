@@ -1,0 +1,35 @@
+{
+    "config": {
+        "activeVehicles": 45,
+        "buildType": "Release",
+        "rain": true,
+        "resolution": "1600x900",
+        "shadows": false,
+        "vsync": false
+    },
+    "hardware": {
+        "cpu": "Intel(R) Core(TM) Ultra 7 155H",
+        "driver": "32.0.16.1714 (NVIDIA 617.14)",
+        "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+        "os": "Windows 11 64-bit",
+        "ramGb": 16
+    },
+    "metrics": {
+        "avgFps": 1573.9215087890625,
+        "bottleneck": "CPU Bound (Simulation/API Dispatch)",
+        "cpuRenderTimeMs": 0.6268318295478821,
+        "cpuSimTimeMs": 0.0017116224626079202,
+        "drawCalls": 1.0,
+        "durationSec": 10.00047492980957,
+        "frameTimeMaxMs": 12.431999206542969,
+        "frameTimeMeanMs": 0.6353557109832764,
+        "frameTimeMedianMs": 0.6140000224113464,
+        "frameTimeP95Ms": 0.8989999890327454,
+        "frameTimeP99Ms": 1.1950000524520874,
+        "gpuMainPassMs": 0.11218497157096863,
+        "gpuShadowPassMs": 0.0,
+        "low1PctFps": 836.820068359375,
+        "sampleCount": 15740,
+        "triangles": 1426.0
+    }
+}

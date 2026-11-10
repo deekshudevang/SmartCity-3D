@@ -1,8 +1,8 @@
-# SmartCity 3D — Environment Setup Script
+# SmartCity 3D - Environment Setup Script
 $ErrorActionPreference = 'Stop'
 
 Write-Host "=====================================================" -ForegroundColor Cyan
-Write-Host " SmartCity 3D — Environment Verification & Setup     " -ForegroundColor Cyan
+Write-Host " SmartCity 3D - Environment Verification and Setup   " -ForegroundColor Cyan
 Write-Host "=====================================================" -ForegroundColor Cyan
 
 # 1. Check Git
@@ -14,35 +14,32 @@ try {
 }
 
 # 2. Check CMake
+if (Test-Path "C:\Users\deeks\tools\cmake\bin\cmake.exe") {
+    $env:PATH = "C:\Users\deeks\tools\cmake\bin;$env:PATH"
+}
 $cmakeCmd = Get-Command cmake -ErrorAction SilentlyContinue
 if (-not $cmakeCmd) {
-    if (Test-Path "C:\Users\deeks\tools\cmake\bin\cmake.exe") {
-        $env:PATH = "C:\Users\deeks\tools\cmake\bin;$env:PATH"
-        Write-Host "[OK] CMake located at C:\Users\deeks\tools\cmake\bin" -ForegroundColor Green
-    } else {
-        Write-Error "CMake >= 3.21 is required but not found."
-    }
+    Write-Error "CMake >= 3.21 is required but not found."
 } else {
     $cmakeVer = cmake --version | Select-Object -First 1
     Write-Host "[OK] $cmakeVer" -ForegroundColor Green
 }
 
-# 3. Check C++ Toolchain (MSVC or MinGW-w64)
+# 3. Check C++ Toolchain (prioritizing 64-bit toolchain)
+if (Test-Path "C:\Users\deeks\tools\w64devkit\bin\gcc.exe") {
+    $cleanPath = ($env:PATH -split ';' | Where-Object { $_ -notmatch '(?i)mingw' }) -join ';'
+    $env:PATH = "C:\Users\deeks\tools\w64devkit\bin;$cleanPath"
+}
+
 $clCmd = Get-Command cl -ErrorAction SilentlyContinue
 $gccCmd = Get-Command gcc -ErrorAction SilentlyContinue
-if (-not $clCmd -and -not $gccCmd) {
-    if (Test-Path "C:\Users\deeks\tools\w64devkit\bin\gcc.exe") {
-        $env:PATH = "C:\Users\deeks\tools\w64devkit\bin;$env:PATH"
-        Write-Host "[OK] MinGW-w64 GCC located at C:\Users\deeks\tools\w64devkit\bin" -ForegroundColor Green
-    } else {
-        Write-Error "No supported C++17 compiler (MSVC cl.exe or GCC 64-bit) found."
-    }
+
+if ($clCmd) {
+    Write-Host "[OK] MSVC compiler found: $($clCmd.Source)" -ForegroundColor Green
+} elseif ($gccCmd) {
+    Write-Host "[OK] GCC compiler found: $($gccCmd.Source)" -ForegroundColor Green
 } else {
-    if ($clCmd) {
-        Write-Host "[OK] MSVC compiler found: $($clCmd.Source)" -ForegroundColor Green
-    } elseif ($gccCmd) {
-        Write-Host "[OK] GCC compiler found: $($gccCmd.Source)" -ForegroundColor Green
-    }
+    Write-Error "No supported C++17 compiler (MSVC cl.exe or GCC 64-bit) found."
 }
 
 # 4. vcpkg integration check / bootstrap
@@ -58,4 +55,3 @@ if (-not $env:VCPKG_ROOT) {
 }
 
 Write-Host "Setup verification complete. Development environment is ready!" -ForegroundColor Green
-
