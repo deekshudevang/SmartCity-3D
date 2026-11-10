@@ -12,6 +12,10 @@
 #include "sim/ISignalProvider.h"
 #include "sim/IDMController.h"
 
+namespace SmartCity::ped {
+class PedestrianManager;
+}
+
 namespace SmartCity::sim {
 
 struct SimDemandConfig {
@@ -85,7 +89,12 @@ public:
     void SetSignalProvider(std::shared_ptr<ISignalProvider> provider) { m_signalProvider = provider; }
     ISignalProvider* GetSignalProvider() { return m_signalProvider.get(); }
 
+    void SetPedestrianManager(ped::PedestrianManager* pm) { m_pedestrianManager = pm; }
+    ped::PedestrianManager* GetPedestrianManager() { return m_pedestrianManager; }
+
     const SimEngineConfig& GetConfig() const { return m_config; }
+    SimEngineConfig& GetConfigMutable() { return m_config; }
+    void SetConfig(const SimEngineConfig& cfg) { m_config = cfg; }
 
     // Builds a composite route from RoadNetwork
     VehicleRoute CreateRoute(city::ApproachId approach, city::MovementType movement, int laneIndex);
@@ -101,6 +110,7 @@ private:
 
     const city::RoadNetwork& m_roadNetwork;
     std::shared_ptr<ISignalProvider> m_signalProvider;
+    ped::PedestrianManager* m_pedestrianManager{ nullptr };
     ConflictManager m_conflictManager;
 
     SimEngineConfig m_config;
@@ -133,3 +143,4 @@ private:
 };
 
 } // namespace SmartCity::sim
+

@@ -36,3 +36,4 @@ private:
 };
 
 } // namespace SmartCity::sim
+

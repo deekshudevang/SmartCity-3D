@@ -27,3 +27,4 @@ struct OrientedBoundingBox {
 bool CheckSATOverlap(const OrientedBoundingBox& a, const OrientedBoundingBox& b);
 
 } // namespace SmartCity::sim
+

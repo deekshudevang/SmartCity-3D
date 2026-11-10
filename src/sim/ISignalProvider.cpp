@@ -102,3 +102,4 @@ SignalAspect FixedCycleSignalProvider::GetState(city::ApproachId approach, city:
 }
 
 } // namespace SmartCity::sim
+

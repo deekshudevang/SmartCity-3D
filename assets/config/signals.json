@@ -1,0 +1,24 @@
+{
+  "mode": "fixed",
+  "yellow_duration": 3.0,
+  "all_red_clearance": 2.0,
+  "min_green": 10.0,
+  "max_green": 60.0,
+  "fixed_green_ns": 24.0,
+  "fixed_green_ew": 20.0,
+  "pedestrian_walk_time": 7.0,
+  "pedestrian_walking_speed": 1.2,
+  "adaptive": {
+    "detector_stopline_distance": 15.0,
+    "detector_upstream_distance": 80.0,
+    "queue_threshold": 2,
+    "opposing_queue_margin": 2,
+    "unit_extension_time": 3.0,
+    "starvation_max_red": 60.0
+  },
+  "emergency": {
+    "detection_distance": 100.0,
+    "max_extension_cap": 15.0,
+    "cooldown_time": 10.0
+  }
+}

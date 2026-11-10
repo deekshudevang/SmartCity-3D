@@ -23,6 +23,8 @@
 
 #include "city/CityEnvironment.h"
 #include "sim/TrafficManager.h"
+#include "traffic/TrafficSignalController.h"
+#include "ped/PedestrianManager.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -152,6 +154,14 @@ int Application::Run() {
     // Traffic Simulation Manager
     auto traffic = std::make_unique<sim::TrafficManager>(simSettings, interSettings);
 
+    // Traffic Signal Controller & Pedestrian Simulation Manager
+    auto signalController = std::make_shared<traffic::TrafficSignalController>();
+    signalController->LoadConfig("assets/config/signals.json");
+    signalController->EnableCsvLogging("logs/signals_latest.csv");
+
+    auto pedestrianManager = std::make_unique<ped::PedestrianManager>(city->GetRoadNetwork(), signalController);
+    pedestrianManager->LoadConfig("assets/config/pedestrians.json");
+
     // Lighting Environment
     gfx::LightingEnvironment lightingEnv;
     gfx::SpotLight spot;
@@ -267,6 +277,30 @@ int Application::Run() {
         while (timer.ShouldSimulateStep()) {
             float fixedDt = static_cast<float>(timer.GetFixedDeltaTime());
             dayNight->Update(fixedDt);
+
+            signalController->Update(fixedDt);
+            pedestrianManager->Step(fixedDt);
+
+            auto toAspectInt = [](sim::SignalAspect aspect) -> int {
+                switch (aspect) {
+                    case sim::SignalAspect::Red: return 0;
+                    case sim::SignalAspect::Yellow: return 1;
+                    case sim::SignalAspect::Green: return 2;
+                }
+                return 0;
+            };
+
+            nsSignal = toAspectInt(signalController->GetState(city::ApproachId::North, city::MovementType::Through));
+            ewSignal = toAspectInt(signalController->GetState(city::ApproachId::East, city::MovementType::Through));
+            nsLeft   = toAspectInt(signalController->GetState(city::ApproachId::North, city::MovementType::Left));
+            ewLeft   = toAspectInt(signalController->GetState(city::ApproachId::East, city::MovementType::Left));
+
+            bool flashState = (std::fmod(signalController->GetSimTime(), 0.5f) < 0.25f);
+            nsPedWalk = (signalController->GetPedestrianSignal("CW_North") == traffic::PedSignalAspect::Walk) ||
+                        (signalController->GetPedestrianSignal("CW_North") == traffic::PedSignalAspect::FlashingDontWalk && flashState);
+            ewPedWalk = (signalController->GetPedestrianSignal("CW_East") == traffic::PedSignalAspect::Walk) ||
+                        (signalController->GetPedestrianSignal("CW_East") == traffic::PedSignalAspect::FlashingDontWalk && flashState);
+
             traffic->Update(fixedDt, nsSignal, ewSignal, nsLeft, ewLeft);
             timer.ConsumeSimulateStep();
         }
@@ -340,6 +374,7 @@ int Application::Run() {
 
         city->Render(sceneShaderHandle.get(), emissiveShader.get(), nsSignal, ewSignal, nsLeft, ewLeft, nsPedWalk, ewPedWalk);
         traffic->Render(sceneShaderHandle.get(), emissiveShader.get());
+        pedestrianManager->Render(sceneShaderHandle.get());
 
         // Draw Debug Overlays from real RoadNetwork data
         if (showLaneCenters || showTurningBeziers || showConflictZones || showStopLines || showEntryExit) {
@@ -544,13 +579,51 @@ int Application::Run() {
                 }
 
                 ImGui::Separator();
-                ImGui::Text("Signal Head Test Overrides:");
-                const char* signalNames[] = { "RED", "YELLOW", "GREEN" };
-                ImGui::Combo("N-S Signal", &nsSignal, signalNames, 3);
-                ImGui::Combo("E-W Signal", &ewSignal, signalNames, 3);
-                ImGui::Checkbox("N-S Pedestrian Walk", &nsPedWalk);
+                ImGui::Text("Traffic Signal Controller (ISignalProvider):");
+                ImGui::Text("Phase: %s | Elapsed: %.1fs / %.1fs (Rem: %.1fs)",
+                            traffic::ToString(signalController->GetCurrentPhase()),
+                            signalController->GetPhaseElapsed(),
+                            signalController->GetPhaseDuration(),
+                            signalController->GetPhaseRemaining());
+
+                bool isAdaptive = (signalController->GetMode() == traffic::SignalMode::Adaptive);
+                if (ImGui::RadioButton("Fixed-Time Mode", !isAdaptive)) {
+                    signalController->SetMode(traffic::SignalMode::FixedTime);
+                }
                 ImGui::SameLine();
-                ImGui::Checkbox("E-W Pedestrian Walk", &ewPedWalk);
+                if (ImGui::RadioButton("Adaptive Mode", isAdaptive)) {
+                    signalController->SetMode(traffic::SignalMode::Adaptive);
+                }
+
+                ImGui::Text("Pedestrian Heads: CW_N [%s] CW_S [%s] CW_E [%s] CW_W [%s]",
+                            traffic::ToString(signalController->GetPedestrianSignal("CW_North")),
+                            traffic::ToString(signalController->GetPedestrianSignal("CW_South")),
+                            traffic::ToString(signalController->GetPedestrianSignal("CW_East")),
+                            traffic::ToString(signalController->GetPedestrianSignal("CW_West")));
+
+                if (ImGui::Button("Call CW_North Ped")) {
+                    signalController->RequestPedestrianCrossing("CW_North");
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Call CW_East Ped")) {
+                    signalController->RequestPedestrianCrossing("CW_East");
+                }
+
+                ImGui::Separator();
+                ImGui::Text("Pedestrian Agents:");
+                ImGui::Text("Active: %zu | Spawned: %d | Exited: %d | Violations: %d",
+                            pedestrianManager->GetActiveCount(),
+                            pedestrianManager->GetTotalSpawned(),
+                            pedestrianManager->GetTotalCompleted(),
+                            pedestrianManager->GetIllegalCrossingStarts());
+
+                if (ImGui::Button("Spawn Pedestrian (CW_North)")) {
+                    pedestrianManager->SpawnPedestrian("CW_North");
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Spawn Pedestrian (CW_East)")) {
+                    pedestrianManager->SpawnPedestrian("CW_East");
+                }
             }
 
             ImGui::End();

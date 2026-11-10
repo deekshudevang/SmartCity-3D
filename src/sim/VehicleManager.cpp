@@ -1,4 +1,6 @@
 #include "sim/VehicleManager.h"
+#include "ped/PedestrianManager.h"
+#include "traffic/TrafficSignalController.h"
 #include "core/Logger.h"
 #include <fstream>
 #include <sstream>
@@ -397,6 +399,17 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
     float frontBumperS = s + dims.length * 0.5f;
     float distToStopLine = stopDist - frontBumperS;
 
+    // Emergency vehicle registration with signal controller
+    if (vehicle->IsEmergency() && m_signalProvider) {
+        if (auto* ctrl = dynamic_cast<traffic::TrafficSignalController*>(m_signalProvider.get())) {
+            if (frontBumperS < stopDist && distToStopLine <= 100.0f && distToStopLine > 0.0f) {
+                ctrl->RegisterEmergencyVehicle(vehicle->GetId(), route.approachId, distToStopLine);
+            } else if (frontBumperS >= stopDist) {
+                ctrl->UnregisterEmergencyVehicle(vehicle->GetId());
+            }
+        }
+    }
+
     if (frontBumperS < stopDist) {
         SignalAspect aspect = SignalAspect::Green;
         if (m_signalProvider) {
@@ -432,12 +445,65 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
         }
     }
 
+    // 4. Vehicle-Pedestrian Conflict Yielding
+    // Vehicles turning or crossing crosswalks must yield to crossing pedestrians
+    if (m_pedestrianManager) {
+        std::string targetCrosswalkId;
+        const city::Lane* depLane = route.outboundLane ? route.outboundLane : m_roadNetwork.GetLane(route.outboundLaneId);
+        if (depLane) {
+            switch (depLane->approach) {
+                case city::ApproachId::North: targetCrosswalkId = "CW_North"; break;
+                case city::ApproachId::South: targetCrosswalkId = "CW_South"; break;
+                case city::ApproachId::East:  targetCrosswalkId = "CW_East";  break;
+                case city::ApproachId::West:  targetCrosswalkId = "CW_West";  break;
+            }
+        }
+
+        if (!targetCrosswalkId.empty() && m_pedestrianManager->HasPedestriansCrossing(targetCrosswalkId)) {
+            auto pedPositions = m_pedestrianManager->GetPedestrianPositionsOnCrosswalk(targetCrosswalkId);
+            glm::vec3 vehPos = vehicle->GetPosition();
+            float h = vehicle->GetHeadingRad();
+            glm::vec3 vehFwd(std::sin(h), 0.0f, std::cos(h));
+            glm::vec3 vehLat(std::cos(h), 0.0f, -std::sin(h));
+
+            float minPedDistance = 1e9f;
+            for (const auto& pPos : pedPositions) {
+                glm::vec3 rel = pPos - vehPos;
+                float fwdDist = glm::dot(rel, vehFwd);
+                float latDist = std::abs(glm::dot(rel, vehLat));
+
+                // Corridor check: pedestrian is ahead within 12m and lateral gap < width/2 + 1.8m
+                if (fwdDist > 0.0f && fwdDist < 12.0f && latDist < (dims.width * 0.5f + 1.8f)) {
+                    if (fwdDist < minPedDistance) {
+                        minPedDistance = fwdDist;
+                    }
+                }
+            }
+
+            if (minPedDistance < 15.0f) {
+                float clearDist = std::max(0.1f, minPedDistance - dims.length * 0.5f - 1.0f);
+                float pedBrakeAccel = IDMController::CalculateStopLineAcceleration(physics, v, clearDist);
+                accel = std::min(accel, pedBrakeAccel);
+                if (clearDist <= 0.8f && v < 0.2f) {
+                    vehicle->SetSpeed(0.0f);
+                    accel = std::min(accel, 0.0f);
+                    vehicle->SetState(VehicleState::Waiting);
+                }
+            }
+        }
+    }
+
     vehicle->SetAcceleration(accel);
     vehicle->Update(dt);
 
     // Release reservations upon exiting the intersection into departure lane
     if (vehicle->GetDistanceAlongRoute() >= exitDist) {
         m_conflictManager.ReleaseReservation(vehicle->GetId());
+        if (vehicle->IsEmergency() && m_signalProvider) {
+            if (auto* ctrl = dynamic_cast<traffic::TrafficSignalController*>(m_signalProvider.get())) {
+                ctrl->UnregisterEmergencyVehicle(vehicle->GetId());
+            }
+        }
     }
 }
 

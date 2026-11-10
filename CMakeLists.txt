@@ -104,6 +104,9 @@ set(SMARTCITY_CORE_SOURCES
     src/sim/ArcLengthLUT.cpp
     src/sim/ConflictManager.cpp
     src/sim/VehicleManager.cpp
+    src/traffic/TrafficSignalController.cpp
+    src/ped/PedestrianAgent.cpp
+    src/ped/PedestrianManager.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS
@@ -138,6 +141,10 @@ set(SMARTCITY_CORE_HEADERS
     src/sim/Vehicle.h
     src/sim/IDMController.h
     src/sim/TrafficManager.h
+    src/traffic/SignalTypes.h
+    src/traffic/TrafficSignalController.h
+    src/ped/PedestrianAgent.h
+    src/ped/PedestrianManager.h
 )
 
 add_library(SmartCityCore STATIC
