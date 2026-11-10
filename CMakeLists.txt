@@ -72,6 +72,12 @@ set(SMARTCITY_CORE_SOURCES
     src/core/Time.cpp
     src/core/Input.cpp
     src/core/Window.cpp
+    src/graphics/Buffer.cpp
+    src/graphics/Mesh.cpp
+    src/graphics/Shader.cpp
+    src/graphics/Camera.cpp
+    src/graphics/Light.cpp
+    src/graphics/ShadowMap.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS
@@ -79,6 +85,12 @@ set(SMARTCITY_CORE_HEADERS
     src/core/Time.h
     src/core/Input.h
     src/core/Window.h
+    src/graphics/Buffer.h
+    src/graphics/Mesh.h
+    src/graphics/Shader.h
+    src/graphics/Camera.h
+    src/graphics/Light.h
+    src/graphics/ShadowMap.h
 )
 
 add_library(SmartCityCore STATIC

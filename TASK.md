@@ -12,8 +12,8 @@
 | Phase | Description | Status | Verification Evidence |
 | :--- | :--- | :--- | :--- |
 | **Phase 1** | Project Architecture, Core Foundation & Build System | VERIFIED | CMake C++17 build, GLAD, GLFW, GLM, ImGui, tests passed 100%, RTX 4060 GL 3.3 init |
-| **Phase 2** | 3D Graphics Pipeline, Shaders, Lighting & Camera | IN_PROGRESS | Shaders, VAO/VBO/EBO, Blinn-Phong & Day/Night lighting, Shadow mapping, Multi-cam |
-| **Phase 3** | 4-Way Urban Intersection & Surrounding City Environment | PENDING | Roads, multi-lane markings, crosswalks, sidewalks, buildings, street furniture |
+| **Phase 2** | 3D Graphics Pipeline, Shaders, Lighting & Camera | VERIFIED | GLSL 330 shaders, 2048x2048 ShadowMap FBO, Blinn-Phong + PCF shadows, Day/Night, Multi-cam |
+| **Phase 3** | 4-Way Urban Intersection & Surrounding City Environment | IN_PROGRESS | Roads, multi-lane markings, crosswalks, sidewalks, buildings, street furniture |
 | **Phase 4** | Traffic Simulation Engine & Realistic Vehicle Dynamics | PENDING | IDM car-following, Bézier turning curves, collision avoidance, multi-vehicle classes |
 | **Phase 5** | Pedestrian Dynamics & Crosswalk Safety Logic | PENDING | Pedestrian agent navigation, waiting zones, zebra crossing compliance |
 | **Phase 6** | Traffic Signal Controllers & Smart Urban Management | PENDING | Fixed-time, adaptive queue-actuated, and emergency vehicle preemption (EVP) |
@@ -40,25 +40,25 @@
 ---
 
 ### Phase 2: 3D Graphics Pipeline, Shaders, Lighting & Camera
-- [ ] Implement `Shader` class with shader compilation, linkage error checking, and hot-reload/fallback.
-- [ ] Implement GLSL 330 shaders:
-  - `scene.vert` / `scene.frag`: Blinn-Phong directional lighting, ambient transition, point lights (streetlights, headlights, emergency strobes).
+- [x] Implement `Shader` class with shader compilation, linkage error checking, and hot-reload/fallback (`src/graphics/Shader.h/.cpp`).
+- [x] Implement GLSL 330 shaders:
+  - `scene.vert` / `scene.frag`: Blinn-Phong directional lighting, ambient transition, point lights (streetlights, headlights, emergency strobes), 3x3 PCF soft shadows.
   - `shadow_depth.vert` / `shadow_depth.frag`: Directional shadow depth pass.
   - `light_indicator.vert` / `light_indicator.frag`: Emissive traffic signal lamps and glowing elements.
-- [ ] Implement `Camera` system with View-Projection matrices:
+- [x] Implement `Camera` system with View-Projection matrices:
   - Perspective projection (FOV 45°, near 0.1, far 1000.0)
   - Orbit camera mode (pan, rotate, zoom)
   - Free-flight camera mode (WASD + mouse look)
-  - Fixed camera presets: Overview 45°, Top-Down Orthographic, Street Level, Traffic Cam, In-Vehicle Chase Cam
-- [ ] Implement Shadow Mapping pipeline:
-  - 2048x2048 Depth Framebuffer Object (FBO)
-  - Orthographic shadow projection matrix covering the intersection
+  - Fixed camera presets: Overview 45°, Top-Down Orthographic, North Traffic Cam, East Traffic Cam, Pedestrian View
+  - Tested with unit test `test_camera` (100% pass).
+- [x] Implement Shadow Mapping pipeline:
+  - 2048x2048 Depth Framebuffer Object (FBO) with `GL_DEPTH_COMPONENT24`
+  - Orthographic shadow projection matrix covering 80m x 80m intersection area
   - Percentage-Closer Filtering (PCF) 3x3 kernel soft shadows
-- [ ] Implement Day/Night lighting manager:
+- [x] Implement Day/Night lighting manager (`src/graphics/Light.h/.cpp`):
   - Dynamic sun/moon angle based on simulated time of day (0.0 to 24.0 hours)
-  - Ambient light temperature transitions (dawn warm, noon crisp white, dusk amber, night deep indigo)
-  - Directional shadow angle updates
-  - Automatic dusk/night activation of streetlights and vehicle headlights
+  - Ambient light temperature transitions (dawn, noon, dusk, night)
+  - Automatic dusk/night activation of streetlights and vehicle headlights.
 
 ---
 

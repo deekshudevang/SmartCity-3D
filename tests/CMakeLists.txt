@@ -1,7 +1,6 @@
 # Automated CTest Test Suite
 enable_testing()
 
-# Helper macro for test binaries
 macro(add_smartcity_test test_name test_source)
     add_executable(${test_name} ${test_source})
     target_link_libraries(${test_name} PRIVATE SmartCityCore)
@@ -15,3 +14,4 @@ endmacro()
 
 add_smartcity_test(test_math test_math.cpp)
 add_smartcity_test(test_time test_time.cpp)
+add_smartcity_test(test_camera test_camera.cpp)
