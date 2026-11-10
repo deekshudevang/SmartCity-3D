@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 enum class ShaderDataType {
     None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
@@ -141,4 +141,4 @@ private:
     const IndexBuffer* m_indexBuffer;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

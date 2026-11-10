@@ -1,7 +1,7 @@
-#include "graphics/Mesh.h"
+#include "gfx/Mesh.h"
 #include <cmath>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
     : m_vertexCount(static_cast<uint32_t>(vertices.size()))
@@ -80,12 +80,12 @@ std::unique_ptr<Mesh> Mesh::CreateCube(const glm::vec3& size, const glm::vec4& c
     };
 
     std::vector<uint32_t> indices = {
-         0,  1,  2,  2,  3,  0, // Front
-         4,  5,  6,  6,  7,  4, // Back
-         8,  9, 10, 10, 11,  8, // Top
-        12, 13, 14, 14, 15, 12, // Bottom
-        16, 17, 18, 18, 19, 16, // Right
-        20, 21, 22, 22, 23, 20  // Left
+         0,  1,  2,  2,  3,  0,
+         4,  5,  6,  6,  7,  4,
+         8,  9, 10, 10, 11,  8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20
     };
 
     return std::make_unique<Mesh>(vertices, indices);
@@ -116,7 +116,6 @@ std::unique_ptr<Mesh> Mesh::CreateCylinder(float radius, float height, int segme
     float halfH = height * 0.5f;
     float angleStep = 2.0f * 3.14159265359f / static_cast<float>(segments);
 
-    // Side vertices
     for (int i = 0; i <= segments; ++i) {
         float angle = i * angleStep;
         float x = radius * std::cos(angle);
@@ -124,10 +123,7 @@ std::unique_ptr<Mesh> Mesh::CreateCylinder(float radius, float height, int segme
         float u = static_cast<float>(i) / static_cast<float>(segments);
 
         glm::vec3 normal(std::cos(angle), 0.0f, std::sin(angle));
-
-        // Bottom vertex
         vertices.push_back({ { x, -halfH, z }, normal, { u, 0.0f }, color });
-        // Top vertex
         vertices.push_back({ { x,  halfH, z }, normal, { u, 1.0f }, color });
     }
 
@@ -146,7 +142,6 @@ std::unique_ptr<Mesh> Mesh::CreateCylinder(float radius, float height, int segme
         indices.push_back(t0);
     }
 
-    // Top cap center
     uint32_t topCenterIdx = static_cast<uint32_t>(vertices.size());
     vertices.push_back({ { 0.0f, halfH, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 0.5f }, color });
     for (int i = 0; i < segments; ++i) {
@@ -157,7 +152,6 @@ std::unique_ptr<Mesh> Mesh::CreateCylinder(float radius, float height, int segme
         indices.push_back(t1);
     }
 
-    // Bottom cap center
     uint32_t bottomCenterIdx = static_cast<uint32_t>(vertices.size());
     vertices.push_back({ { 0.0f, -halfH, 0.0f }, { 0.0f, -1.0f, 0.0f }, { 0.5f, 0.5f }, color });
     for (int i = 0; i < segments; ++i) {
@@ -182,8 +176,8 @@ std::unique_ptr<Mesh> Mesh::CreateSphere(float radius, int rings, int sectors, c
     for (int r = 0; r < rings; ++r) {
         for (int s = 0; s < sectors; ++s) {
             float y = std::sin(-PI * 0.5f + PI * r * R);
-            float x = std::cos(2 * PI * s * S) * std::sin(PI * r * R);
-            float z = std::sin(2 * PI * s * S) * std::sin(PI * r * R);
+            float x = std::cos(2.0f * PI * s * S) * std::sin(PI * r * R);
+            float z = std::sin(2.0f * PI * s * S) * std::sin(PI * r * R);
 
             glm::vec3 pos = glm::vec3(x, y, z) * radius;
             glm::vec3 norm = glm::normalize(pos);
@@ -211,4 +205,4 @@ std::unique_ptr<Mesh> Mesh::CreateSphere(float radius, int rings, int sectors, c
     return std::make_unique<Mesh>(vertices, indices);
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

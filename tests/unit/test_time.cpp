@@ -6,23 +6,22 @@
 #include "core/Logger.h"
 
 int main() {
-    SmartCity::Logger::Info("Running test_time...");
+    SmartCity::core::Logger::Init("logs/test_time.log");
+    SmartCity::core::Logger::Info("Running unit test_time...");
 
-    double fixedDt = 1.0 / 60.0; // 0.016666...
-    SmartCity::Time timer(fixedDt);
+    double fixedDt = 1.0 / 60.0;
+    SmartCity::core::Time timer(fixedDt);
 
-    // Initial state check
     assert(timer.GetTickCount() == 0);
     assert(timer.GetTotalSimTime() == 0.0);
     assert(!timer.IsPaused());
     assert(timer.GetTimeScale() == 1.0);
-    SmartCity::Logger::Info("[PASS] Timer initial state");
+    SmartCity::core::Logger::Info("[PASS] Timer initial state");
 
-    // Simulate elapsed time by sleeping a known short duration or running iterations
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     timer.Update();
 
-    assert(timer.GetFrameDeltaTime() > 0.030); // At least 30ms elapsed
+    assert(timer.GetFrameDeltaTime() > 0.030);
     assert(timer.ShouldSimulateStep());
 
     int simulatedSteps = 0;
@@ -31,23 +30,22 @@ int main() {
         simulatedSteps++;
     }
 
-    assert(simulatedSteps >= 2); // 50ms should produce 2 or 3 16.6ms steps
+    assert(simulatedSteps >= 2);
     assert(timer.GetTickCount() == static_cast<uint64_t>(simulatedSteps));
     assert(std::abs(timer.GetTotalSimTime() - (simulatedSteps * fixedDt)) < 1e-6);
-    SmartCity::Logger::Info("[PASS] Fixed timestep accumulation (", simulatedSteps, " steps)");
+    SmartCity::core::Logger::Info("[PASS] Fixed timestep accumulation (", simulatedSteps, " steps)");
 
-    // Test Paused state
     timer.SetPaused(true);
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
     timer.Update();
-    assert(!timer.ShouldSimulateStep()); // No accumulator increase when paused
-    SmartCity::Logger::Info("[PASS] Simulation pause behavior");
+    assert(!timer.ShouldSimulateStep());
+    SmartCity::core::Logger::Info("[PASS] Simulation pause behavior");
 
-    // Test Interpolation Alpha bounds
     double alpha = timer.GetInterpolationAlpha();
     assert(alpha >= 0.0 && alpha <= 1.0);
-    SmartCity::Logger::Info("[PASS] Interpolation alpha within [0, 1] range: ", alpha);
+    SmartCity::core::Logger::Info("[PASS] Interpolation alpha within [0, 1] range: ", alpha);
 
-    SmartCity::Logger::Info("All test_time tests PASSED successfully!");
+    SmartCity::core::Logger::Info("All test_time unit tests PASSED successfully!");
+    SmartCity::core::Logger::Shutdown();
     return 0;
 }

@@ -1,12 +1,31 @@
 #include "core/Logger.h"
+#include <filesystem>
 
-namespace SmartCity {
+namespace SmartCity::core {
 
-void Logger::Init() {
-    // Initialized logging subsystem
+void Logger::Init(const std::string& logFilePath) {
+    std::lock_guard<std::mutex> lock(s_mutex);
+    if (!s_initialized) {
+        std::filesystem::path path(logFilePath);
+        if (path.has_parent_path()) {
+            std::filesystem::create_directories(path.parent_path());
+        }
+        s_logFile.open(logFilePath, std::ios::out | std::ios::app);
+        s_initialized = true;
+    }
+}
+
+void Logger::Shutdown() {
+    std::lock_guard<std::mutex> lock(s_mutex);
+    if (s_logFile.is_open()) {
+        s_logFile.close();
+    }
+    s_initialized = false;
 }
 
 void Logger::Log(LogLevel level, const std::string& message) {
+    std::lock_guard<std::mutex> lock(s_mutex);
+
     const char* levelStr = "INFO";
     switch (level) {
         case LogLevel::Debug: levelStr = "DEBUG"; break;
@@ -26,9 +45,21 @@ void Logger::Log(LogLevel level, const std::string& message) {
     localtime_r(&in_time_t, &timeInfo);
 #endif
 
-    std::cout << "[" << std::put_time(&timeInfo, "%H:%M:%S") << "." 
-              << std::setfill('0') << std::setw(3) << ms.count() << "] "
-              << "[" << levelStr << "] " << message << std::endl;
+    std::ostringstream ss;
+    ss << "[" << std::put_time(&timeInfo, "%Y-%m-%d %H:%M:%S") << "." 
+       << std::setfill('0') << std::setw(3) << ms.count() << "] "
+       << "[" << levelStr << "] " << message;
+
+    std::string formatted = ss.str();
+
+    // Console output
+    std::cout << formatted << std::endl;
+
+    // File output
+    if (s_logFile.is_open()) {
+        s_logFile << formatted << std::endl;
+        s_logFile.flush();
+    }
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::core

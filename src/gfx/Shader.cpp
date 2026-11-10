@@ -1,11 +1,11 @@
-#include "graphics/Shader.h"
+#include "gfx/Shader.h"
 #include "core/Logger.h"
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 Shader::Shader(const std::string& vertexInput, const std::string& fragmentInput, bool fromFile)
     : m_rendererId(0)
@@ -19,8 +19,7 @@ Shader::Shader(const std::string& vertexInput, const std::string& fragmentInput,
     }
 
     if (vSource.empty() || fSource.empty()) {
-        Logger::Warn("Shader source was empty! Loading default fallback shaders.");
-        // Built-in fallback GLSL 330 shaders
+        core::Logger::Warn("Shader source was empty! Loading default fallback shaders.");
         vSource = 
             "#version 330 core\n"
             "layout(location = 0) in vec3 a_Position;\n"
@@ -56,7 +55,7 @@ Shader::~Shader() {
 std::string Shader::ReadFile(const std::string& filepath) {
     std::ifstream in(filepath, std::ios::in | std::ios::binary);
     if (!in) {
-        Logger::Error("Could not open shader file: ", filepath);
+        core::Logger::Error("Could not open shader file: ", filepath);
         return "";
     }
     std::ostringstream ss;
@@ -81,7 +80,7 @@ bool Shader::Compile(const std::string& vertexSource, const std::string& fragmen
         glGetShaderInfoLog(vs, maxLength, &maxLength, &infoLog[0]);
         glDeleteShader(vs);
         glDeleteProgram(program);
-        Logger::Error("Vertex Shader Compilation Failed:\n", infoLog.data());
+        core::Logger::Error("Vertex Shader Compilation Failed:\n", infoLog.data());
         return false;
     }
 
@@ -99,7 +98,7 @@ bool Shader::Compile(const std::string& vertexSource, const std::string& fragmen
         glDeleteShader(vs);
         glDeleteShader(fs);
         glDeleteProgram(program);
-        Logger::Error("Fragment Shader Compilation Failed:\n", infoLog.data());
+        core::Logger::Error("Fragment Shader Compilation Failed:\n", infoLog.data());
         return false;
     }
 
@@ -117,7 +116,7 @@ bool Shader::Compile(const std::string& vertexSource, const std::string& fragmen
         glDeleteProgram(program);
         glDeleteShader(vs);
         glDeleteShader(fs);
-        Logger::Error("Shader Program Linking Failed:\n", infoLog.data());
+        core::Logger::Error("Shader Program Linking Failed:\n", infoLog.data());
         return false;
     }
 
@@ -177,4 +176,4 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& value) {
     if (loc != -1) glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

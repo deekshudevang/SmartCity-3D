@@ -3,10 +3,12 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <chrono>
 #include <iomanip>
+#include <mutex>
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 enum class LogLevel {
     Debug,
@@ -17,7 +19,8 @@ enum class LogLevel {
 
 class Logger {
 public:
-    static void Init();
+    static void Init(const std::string& logFilePath = "logs/smartcity.log");
+    static void Shutdown();
     static void Log(LogLevel level, const std::string& message);
 
     template<typename... Args>
@@ -58,6 +61,10 @@ private:
         FormatHelper(oss, std::forward<Args>(args)...);
         return oss.str();
     }
+
+    static inline std::ofstream s_logFile;
+    static inline std::mutex s_mutex;
+    static inline bool s_initialized = false;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::core

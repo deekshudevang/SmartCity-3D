@@ -5,19 +5,17 @@
 
 struct GLFWwindow;
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 class Input {
 public:
     static void Init(GLFWwindow* window);
     static void EndFrame();
 
-    // Keyboard queries
-    static bool GetKey(int keycode);        // True if currently held down
-    static bool GetKeyDown(int keycode);    // True only on the frame pressed
-    static bool GetKeyUp(int keycode);      // True only on the frame released
+    static bool GetKey(int keycode);
+    static bool GetKeyDown(int keycode);
+    static bool GetKeyUp(int keycode);
 
-    // Mouse queries
     static bool GetMouseButton(int button);
     static bool GetMouseButtonDown(int button);
     static bool GetMouseButtonUp(int button);
@@ -26,7 +24,6 @@ public:
     static glm::vec2 GetMouseDelta();
     static float GetMouseScrollDelta();
 
-    // Callbacks from GLFW
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
     static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
@@ -47,4 +44,4 @@ private:
     static inline bool s_firstMouseMove = true;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::core

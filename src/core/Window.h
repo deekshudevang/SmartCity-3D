@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 struct WindowProps {
     std::string title = "SmartCity 3D — Intelligent Traffic Intersection";
@@ -36,7 +36,6 @@ public:
     void SetVSync(bool enabled);
     bool IsVSync() const { return m_props.vsync; }
 
-    // Resize callback
     using ResizeCallback = std::function<void(int width, int height)>;
     void SetResizeCallback(ResizeCallback callback) { m_resizeCallback = callback; }
 
@@ -48,4 +47,4 @@ private:
     ResizeCallback m_resizeCallback;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::core

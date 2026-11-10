@@ -1,11 +1,11 @@
-#include "graphics/Camera.h"
+#include "gfx/Camera.h"
 #include "core/Input.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
-Camera::Camera(float fov, float aspectRatio, float nearClip, float farClip)
+Camera::Camera(float fovRad, float aspectRatio, float nearClip, float farClip)
     : m_mode(CameraMode::Orbit)
     , m_currentPreset(CameraPreset::Overview)
     , m_position(0.0f, 45.0f, 55.0f)
@@ -13,15 +13,15 @@ Camera::Camera(float fov, float aspectRatio, float nearClip, float farClip)
     , m_forward(0.0f, -0.6f, -0.8f)
     , m_up(0.0f, 1.0f, 0.0f)
     , m_right(1.0f, 0.0f, 0.0f)
-    , m_fov(fov)
+    , m_fovRad(fovRad)
     , m_aspectRatio(aspectRatio)
     , m_nearClip(nearClip)
     , m_farClip(farClip)
     , m_orbitDistance(70.0f)
-    , m_yaw(-90.0f)
-    , m_pitch(-40.0f)
+    , m_yawRad(glm::radians(-45.0f))
+    , m_pitchRad(glm::radians(-38.0f))
     , m_moveSpeed(25.0f)
-    , m_mouseSensitivity(0.15f)
+    , m_mouseSensitivity(0.003f) // in radians per pixel
 {
     ApplyPreset(CameraPreset::Overview);
 }
@@ -40,36 +40,36 @@ void Camera::ApplyPreset(CameraPreset preset) {
             m_mode = CameraMode::Orbit;
             m_target = glm::vec3(0.0f, 0.0f, 0.0f);
             m_orbitDistance = 75.0f;
-            m_yaw = -45.0f;
-            m_pitch = -38.0f;
+            m_yawRad = glm::radians(-45.0f);
+            m_pitchRad = glm::radians(-38.0f);
             break;
         case CameraPreset::TopDown:
             m_mode = CameraMode::Orbit;
             m_target = glm::vec3(0.0f, 0.0f, 0.0f);
             m_orbitDistance = 85.0f;
-            m_yaw = -90.0f;
-            m_pitch = -89.0f; // close to -90 to avoid gimbal lock singularity
+            m_yawRad = glm::radians(-90.0f);
+            m_pitchRad = glm::radians(-89.0f);
             break;
         case CameraPreset::NorthTrafficCam:
             m_mode = CameraMode::Orbit;
             m_target = glm::vec3(0.0f, 1.0f, 0.0f);
             m_orbitDistance = 45.0f;
-            m_yaw = -90.0f;
-            m_pitch = -22.0f;
+            m_yawRad = glm::radians(-90.0f); // looking South towards +Z
+            m_pitchRad = glm::radians(-22.0f);
             break;
         case CameraPreset::EastTrafficCam:
             m_mode = CameraMode::Orbit;
             m_target = glm::vec3(0.0f, 1.0f, 0.0f);
             m_orbitDistance = 45.0f;
-            m_yaw = 180.0f;
-            m_pitch = -22.0f;
+            m_yawRad = glm::radians(180.0f); // looking West towards -X
+            m_pitchRad = glm::radians(-22.0f);
             break;
         case CameraPreset::PedestrianView:
             m_mode = CameraMode::Orbit;
             m_target = glm::vec3(8.0f, 0.5f, 8.0f);
             m_orbitDistance = 14.0f;
-            m_yaw = -135.0f;
-            m_pitch = -8.0f;
+            m_yawRad = glm::radians(-135.0f);
+            m_pitchRad = glm::radians(-8.0f);
             break;
         case CameraPreset::Custom:
             break;
@@ -88,10 +88,9 @@ void Camera::SetOrbitDistance(float distance) {
 }
 
 void Camera::Update(float dt) {
-    glm::vec2 mouseDelta = Input::GetMouseDelta();
-    float scrollDelta = Input::GetMouseScrollDelta();
+    glm::vec2 mouseDelta = core::Input::GetMouseDelta();
+    float scrollDelta = core::Input::GetMouseScrollDelta();
 
-    // Mouse scroll zooms in orbit mode or speeds up move in fly mode
     if (scrollDelta != 0.0f) {
         if (m_mode == CameraMode::Orbit) {
             SetOrbitDistance(m_orbitDistance - scrollDelta * 3.5f);
@@ -101,17 +100,16 @@ void Camera::Update(float dt) {
         }
     }
 
-    // Right-mouse button rotates camera in both modes
-    if (Input::GetMouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
-        m_yaw += mouseDelta.x * m_mouseSensitivity;
-        m_pitch -= mouseDelta.y * m_mouseSensitivity;
-        m_pitch = std::clamp(m_pitch, -89.0f, 89.0f);
+    if (core::Input::GetMouseButton(GLFW_MOUSE_BUTTON_RIGHT)) {
+        m_yawRad += mouseDelta.x * m_mouseSensitivity;
+        m_pitchRad -= mouseDelta.y * m_mouseSensitivity;
+        float maxPitch = glm::radians(89.0f);
+        m_pitchRad = std::clamp(m_pitchRad, -maxPitch, maxPitch);
         m_currentPreset = CameraPreset::Custom;
         RecalculateVectors();
     }
 
-    // Middle-mouse button pans target in orbit mode
-    if (m_mode == CameraMode::Orbit && Input::GetMouseButton(GLFW_MOUSE_BUTTON_MIDDLE)) {
+    if (m_mode == CameraMode::Orbit && core::Input::GetMouseButton(GLFW_MOUSE_BUTTON_MIDDLE)) {
         float panSpeed = 0.035f * (m_orbitDistance / 50.0f);
         m_target -= m_right * (mouseDelta.x * panSpeed);
         m_target += m_up * (mouseDelta.y * panSpeed);
@@ -119,30 +117,26 @@ void Camera::Update(float dt) {
         RecalculateVectors();
     }
 
-    // FreeFly WASD movement
     if (m_mode == CameraMode::FreeFly) {
         float velocity = m_moveSpeed * dt;
-        if (Input::GetKey(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.0f;
+        if (core::Input::GetKey(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.0f;
 
-        if (Input::GetKey(GLFW_KEY_W)) m_position += m_forward * velocity;
-        if (Input::GetKey(GLFW_KEY_S)) m_position -= m_forward * velocity;
-        if (Input::GetKey(GLFW_KEY_A)) m_position -= m_right * velocity;
-        if (Input::GetKey(GLFW_KEY_D)) m_position += m_right * velocity;
-        if (Input::GetKey(GLFW_KEY_E) || Input::GetKey(GLFW_KEY_SPACE)) m_position += glm::vec3(0.0f, 1.0f, 0.0f) * velocity;
-        if (Input::GetKey(GLFW_KEY_Q) || Input::GetKey(GLFW_KEY_LEFT_CONTROL)) m_position -= glm::vec3(0.0f, 1.0f, 0.0f) * velocity;
+        if (core::Input::GetKey(GLFW_KEY_W)) m_position += m_forward * velocity;
+        if (core::Input::GetKey(GLFW_KEY_S)) m_position -= m_forward * velocity;
+        if (core::Input::GetKey(GLFW_KEY_A)) m_position -= m_right * velocity;
+        if (core::Input::GetKey(GLFW_KEY_D)) m_position += m_right * velocity;
+        if (core::Input::GetKey(GLFW_KEY_E) || core::Input::GetKey(GLFW_KEY_SPACE)) m_position += glm::vec3(0.0f, 1.0f, 0.0f) * velocity;
+        if (core::Input::GetKey(GLFW_KEY_Q) || core::Input::GetKey(GLFW_KEY_LEFT_CONTROL)) m_position -= glm::vec3(0.0f, 1.0f, 0.0f) * velocity;
 
         RecalculateViewMatrix();
     }
 }
 
 void Camera::RecalculateVectors() {
-    float yawRad = glm::radians(m_yaw);
-    float pitchRad = glm::radians(m_pitch);
-
     glm::vec3 front;
-    front.x = std::cos(pitchRad) * std::cos(yawRad);
-    front.y = std::sin(pitchRad);
-    front.z = std::cos(pitchRad) * std::sin(yawRad);
+    front.x = std::cos(m_pitchRad) * std::cos(m_yawRad);
+    front.y = std::sin(m_pitchRad);
+    front.z = std::cos(m_pitchRad) * std::sin(m_yawRad);
     m_forward = glm::normalize(front);
 
     m_right = glm::normalize(glm::cross(m_forward, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -160,7 +154,7 @@ void Camera::RecalculateViewMatrix() {
 }
 
 void Camera::RecalculateProjectionMatrix() {
-    m_projectionMatrix = glm::perspective(glm::radians(m_fov), m_aspectRatio, m_nearClip, m_farClip);
+    m_projectionMatrix = glm::perspective(m_fovRad, m_aspectRatio, m_nearClip, m_farClip);
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

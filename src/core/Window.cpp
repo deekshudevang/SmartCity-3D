@@ -2,7 +2,7 @@
 #include "core/Logger.h"
 #include "core/Input.h"
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 static void GLFWErrorCallback(int error, const char* description) {
     Logger::Error("GLFW Error (", error, "): ", description);
@@ -26,7 +26,6 @@ bool Window::Init() {
         return false;
     }
 
-    // Configure OpenGL 3.3 Core Profile
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -47,7 +46,6 @@ bool Window::Init() {
 
     glfwMakeContextCurrent(m_window);
 
-    // Initialize GLAD function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Logger::Error("Failed to initialize GLAD / OpenGL 3.3 function pointers!");
         glfwDestroyWindow(m_window);
@@ -61,24 +59,17 @@ bool Window::Init() {
     Logger::Info("OpenGL Version:  ", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
     Logger::Info("GLSL Version:    ", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
-    // Store 'this' pointer in window user pointer for callbacks
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, FramebufferSizeCallback);
 
-    // Initialize Input system with this window
     Input::Init(m_window);
 
-    // Configure initial viewport
     glViewport(0, 0, m_props.width, m_props.height);
-
-    // Configure VSync
     SetVSync(m_props.vsync);
 
-    // Enable Depth Testing by default
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    // Enable blending for transparent markings / antialiasing
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -133,4 +124,4 @@ void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height) 
     }
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::core

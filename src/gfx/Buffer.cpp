@@ -1,7 +1,6 @@
-#include "graphics/Buffer.h"
-#include "core/Logger.h"
+#include "gfx/Buffer.h"
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type) {
     switch (type) {
@@ -21,7 +20,6 @@ static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type) {
     return 0;
 }
 
-// ---------------- VertexBuffer ----------------
 VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
     : m_rendererId(0)
 {
@@ -45,7 +43,6 @@ void VertexBuffer::Unbind() const {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-// ---------------- IndexBuffer ----------------
 IndexBuffer::IndexBuffer(const uint32_t* indices, uint32_t count)
     : m_rendererId(0), m_count(count)
 {
@@ -69,7 +66,6 @@ void IndexBuffer::Unbind() const {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-// ---------------- VertexArray ----------------
 VertexArray::VertexArray()
     : m_rendererId(0), m_vertexBufferIndex(0), m_indexBuffer(nullptr)
 {
@@ -120,4 +116,4 @@ void VertexArray::SetIndexBuffer(const IndexBuffer* indexBuffer) {
     m_indexBuffer = indexBuffer;
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

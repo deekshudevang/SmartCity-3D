@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <cstring>
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 void Input::Init(GLFWwindow* window) {
     s_window = window;
@@ -116,4 +116,4 @@ void Input::ScrollCallback(GLFWwindow*, double, double yoffset) {
     s_scrollDelta += static_cast<float>(yoffset);
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::core

@@ -1,13 +1,13 @@
 #include "core/Time.h"
 #include <algorithm>
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 Time::Time(double fixedDeltaTime)
     : m_fixedDeltaTime(fixedDeltaTime)
     , m_frameDeltaTime(0.0)
     , m_accumulator(0.0)
-    , m_maxDeltaTime(0.25) // clamp to 250ms to avoid spiral of death
+    , m_maxDeltaTime(0.25)
     , m_totalRealTime(0.0)
     , m_totalSimTime(0.0)
     , m_timeScale(1.0)
@@ -49,7 +49,6 @@ void Time::Update() {
         m_accumulator += dt * m_timeScale;
     }
 
-    // Update FPS meter
     m_frameCount++;
     m_fpsTimer += dt;
     if (m_fpsTimer >= 0.5) {
@@ -75,4 +74,4 @@ double Time::GetInterpolationAlpha() const {
     return std::clamp(alpha, 0.0, 1.0);
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::core

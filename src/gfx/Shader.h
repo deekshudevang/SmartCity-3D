@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 class Shader {
 public:
@@ -15,7 +15,6 @@ public:
     void Bind() const;
     void Unbind() const;
 
-    // Uniform setters
     void SetInt(const std::string& name, int value);
     void SetFloat(const std::string& name, float value);
     void SetVec2(const std::string& name, const glm::vec2& value);
@@ -36,4 +35,4 @@ private:
     std::unordered_map<std::string, GLint> m_uniformLocationCache;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

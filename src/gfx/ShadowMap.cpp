@@ -1,8 +1,8 @@
-#include "graphics/ShadowMap.h"
+#include "gfx/ShadowMap.h"
 #include "core/Logger.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 ShadowMap::ShadowMap(uint32_t width, uint32_t height)
     : m_fbo(0), m_depthTexture(0), m_width(width), m_height(height)
@@ -27,9 +27,9 @@ ShadowMap::ShadowMap(uint32_t width, uint32_t height)
     glReadBuffer(GL_NONE);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        Logger::Error("Shadow Map Framebuffer is incomplete!");
+        core::Logger::Error("Shadow Map Framebuffer is incomplete!");
     } else {
-        Logger::Info("Shadow Map FBO created (", width, "x", height, ")");
+        core::Logger::Info("Shadow Map FBO created (", width, "x", height, ")");
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -51,7 +51,7 @@ void ShadowMap::BindForWriting() {
     glViewport(0, 0, m_width, m_height);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glCullFace(GL_FRONT); // Peter Panning prevention
+    glCullFace(GL_FRONT);
 }
 
 void ShadowMap::Unbind(int viewportWidth, int viewportHeight) {
@@ -66,7 +66,6 @@ void ShadowMap::BindTexture(uint32_t textureSlot) const {
 }
 
 glm::mat4 ShadowMap::CalculateLightSpaceMatrix(const glm::vec3& lightDir, const glm::vec3& targetCenter) const {
-    // Orthographic shadow projection covering an 80m x 80m intersection area
     float orthoSize = 65.0f;
     glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, 220.0f);
 
@@ -77,4 +76,4 @@ glm::mat4 ShadowMap::CalculateLightSpaceMatrix(const glm::vec3& lightDir, const 
     return lightProjection * lightView;
 }
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

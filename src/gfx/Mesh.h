@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
-#include "graphics/Buffer.h"
+#include "gfx/Buffer.h"
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 struct Vertex {
     glm::vec3 position;
@@ -24,7 +24,6 @@ public:
     uint32_t GetIndexCount() const { return m_indexCount; }
     uint32_t GetVertexCount() const { return m_vertexCount; }
 
-    // Procedural geometry factories
     static std::unique_ptr<Mesh> CreateCube(const glm::vec3& size = glm::vec3(1.0f), const glm::vec4& color = glm::vec4(1.0f));
     static std::unique_ptr<Mesh> CreatePlane(float width, float height, const glm::vec4& color = glm::vec4(1.0f), float uvTileX = 1.0f, float uvTileY = 1.0f);
     static std::unique_ptr<Mesh> CreateCylinder(float radius, float height, int segments = 24, const glm::vec4& color = glm::vec4(1.0f));
@@ -38,4 +37,4 @@ private:
     uint32_t m_indexCount;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

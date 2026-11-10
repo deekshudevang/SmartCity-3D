@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-namespace SmartCity {
+namespace SmartCity::gfx {
 
 class ShadowMap {
 public:
@@ -27,4 +27,4 @@ private:
     uint32_t m_height;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::gfx

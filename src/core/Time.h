@@ -1,8 +1,9 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 
-namespace SmartCity {
+namespace SmartCity::core {
 
 class Time {
 public:
@@ -11,11 +12,10 @@ public:
     void Reset();
     void Update();
 
-    // Fixed timestep query & consumption
+    // Fixed timestep query & consumption (seconds)
     bool ShouldSimulateStep();
     void ConsumeSimulateStep();
 
-    // Accessors
     double GetFrameDeltaTime() const { return m_frameDeltaTime; }
     double GetFixedDeltaTime() const { return m_fixedDeltaTime; }
     double GetTotalRealTime() const { return m_totalRealTime; }
@@ -24,7 +24,6 @@ public:
     uint64_t GetTickCount() const { return m_tickCount; }
     double GetFPS() const { return m_fps; }
 
-    // Simulation speed scale (0.0 = paused, 1.0 = normal, 2.0 = 2x, etc.)
     void SetTimeScale(double scale) { m_timeScale = scale < 0.0 ? 0.0 : scale; }
     double GetTimeScale() const { return m_timeScale; }
     void SetPaused(bool paused) { m_isPaused = paused; }
@@ -47,10 +46,9 @@ private:
     bool m_isPaused;
     uint64_t m_tickCount;
 
-    // FPS calculation
     double m_fps;
     double m_fpsTimer;
     int m_frameCount;
 };
 
-} // namespace SmartCity
+} // namespace SmartCity::core
