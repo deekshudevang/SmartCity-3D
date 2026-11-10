@@ -154,6 +154,9 @@ void Skybox::Draw(const Camera& camera) {
         m_shader->SetVec3("u_TopColor", m_topColor);
         m_shader->SetVec3("u_HorizonColor", m_horizonColor);
         m_shader->SetVec3("u_GroundColor", m_groundColor);
+        m_shader->SetVec3("u_SunDir", m_sunDir);
+        m_shader->SetVec3("u_SunColor", m_sunColor);
+        m_shader->SetFloat("u_NightFactor", m_nightFactor);
     }
 
     glBindVertexArray(m_vao);

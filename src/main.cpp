@@ -10,6 +10,8 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "--headless") {
             args.headless = true;
+        } else if (arg == "--screenshots" || arg == "--phase6-screenshots") {
+            args.screenshots = true;
         } else if (arg == "--config" && i + 1 < argc) {
             args.configPath = argv[++i];
         } else if (arg == "--intersection" && i + 1 < argc) {

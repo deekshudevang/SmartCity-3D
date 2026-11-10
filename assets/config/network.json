@@ -1,0 +1,576 @@
+{
+  "network_version": "1.0",
+  "settings": {
+    "road_width": 14.0000,
+    "lane_width": 3.5000,
+    "approach_length": 120.0000,
+    "stop_line_distance": 19.5000,
+    "crosswalk_distance": 14.0000,
+    "crosswalk_width": 4.0000,
+    "median_width": 1.5000
+  },
+  "lanes": [
+    {
+      "id": "N_IN_0",
+      "approach": "North",
+      "direction": "Inbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [2.5000, 0.0000, -49.5000],
+      "end": [2.5000, 0.0000, -19.5000],
+      "heading": 1.5708
+    },
+    {
+      "id": "N_IN_1",
+      "approach": "North",
+      "direction": "Inbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [6.0000, 0.0000, -120.0000],
+      "end": [6.0000, 0.0000, -19.5000],
+      "heading": 1.5708
+    },
+    {
+      "id": "N_IN_2",
+      "approach": "North",
+      "direction": "Inbound",
+      "lane_index": 2,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [9.5000, 0.0000, -120.0000],
+      "end": [9.5000, 0.0000, -19.5000],
+      "heading": 1.5708
+    },
+    {
+      "id": "N_IN_3",
+      "approach": "North",
+      "direction": "Inbound",
+      "lane_index": 3,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [13.0000, 0.0000, -49.5000],
+      "end": [13.0000, 0.0000, -19.5000],
+      "heading": 1.5708
+    },
+    {
+      "id": "N_OUT_0",
+      "approach": "North",
+      "direction": "Outbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-2.5000, 0.0000, -19.5000],
+      "end": [-2.5000, 0.0000, -120.0000],
+      "heading": 4.7124
+    },
+    {
+      "id": "N_OUT_1",
+      "approach": "North",
+      "direction": "Outbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-6.0000, 0.0000, -19.5000],
+      "end": [-6.0000, 0.0000, -120.0000],
+      "heading": 4.7124
+    },
+    {
+      "id": "E_IN_0",
+      "approach": "East",
+      "direction": "Inbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [49.5000, 0.0000, 2.5000],
+      "end": [19.5000, 0.0000, 2.5000],
+      "heading": 3.1416
+    },
+    {
+      "id": "E_IN_1",
+      "approach": "East",
+      "direction": "Inbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [120.0000, 0.0000, 6.0000],
+      "end": [19.5000, 0.0000, 6.0000],
+      "heading": 3.1416
+    },
+    {
+      "id": "E_IN_2",
+      "approach": "East",
+      "direction": "Inbound",
+      "lane_index": 2,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [120.0000, 0.0000, 9.5000],
+      "end": [19.5000, 0.0000, 9.5000],
+      "heading": 3.1416
+    },
+    {
+      "id": "E_IN_3",
+      "approach": "East",
+      "direction": "Inbound",
+      "lane_index": 3,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [49.5000, 0.0000, 13.0000],
+      "end": [19.5000, 0.0000, 13.0000],
+      "heading": 3.1416
+    },
+    {
+      "id": "E_OUT_0",
+      "approach": "East",
+      "direction": "Outbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [19.5000, 0.0000, -2.5000],
+      "end": [120.0000, 0.0000, -2.5000],
+      "heading": 0.0000
+    },
+    {
+      "id": "E_OUT_1",
+      "approach": "East",
+      "direction": "Outbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [19.5000, 0.0000, -6.0000],
+      "end": [120.0000, 0.0000, -6.0000],
+      "heading": 0.0000
+    },
+    {
+      "id": "S_IN_0",
+      "approach": "South",
+      "direction": "Inbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [-2.5000, 0.0000, 49.5000],
+      "end": [-2.5000, 0.0000, 19.5000],
+      "heading": 4.7124
+    },
+    {
+      "id": "S_IN_1",
+      "approach": "South",
+      "direction": "Inbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-6.0000, 0.0000, 120.0000],
+      "end": [-6.0000, 0.0000, 19.5000],
+      "heading": 4.7124
+    },
+    {
+      "id": "S_IN_2",
+      "approach": "South",
+      "direction": "Inbound",
+      "lane_index": 2,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-9.5000, 0.0000, 120.0000],
+      "end": [-9.5000, 0.0000, 19.5000],
+      "heading": 4.7124
+    },
+    {
+      "id": "S_IN_3",
+      "approach": "South",
+      "direction": "Inbound",
+      "lane_index": 3,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [-13.0000, 0.0000, 49.5000],
+      "end": [-13.0000, 0.0000, 19.5000],
+      "heading": 4.7124
+    },
+    {
+      "id": "S_OUT_0",
+      "approach": "South",
+      "direction": "Outbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [2.5000, 0.0000, 19.5000],
+      "end": [2.5000, 0.0000, 120.0000],
+      "heading": 1.5708
+    },
+    {
+      "id": "S_OUT_1",
+      "approach": "South",
+      "direction": "Outbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [6.0000, 0.0000, 19.5000],
+      "end": [6.0000, 0.0000, 120.0000],
+      "heading": 1.5708
+    },
+    {
+      "id": "W_IN_0",
+      "approach": "West",
+      "direction": "Inbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [-49.5000, 0.0000, -2.5000],
+      "end": [-19.5000, 0.0000, -2.5000],
+      "heading": 0.0000
+    },
+    {
+      "id": "W_IN_1",
+      "approach": "West",
+      "direction": "Inbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-120.0000, 0.0000, -6.0000],
+      "end": [-19.5000, 0.0000, -6.0000],
+      "heading": 0.0000
+    },
+    {
+      "id": "W_IN_2",
+      "approach": "West",
+      "direction": "Inbound",
+      "lane_index": 2,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-120.0000, 0.0000, -9.5000],
+      "end": [-19.5000, 0.0000, -9.5000],
+      "heading": 0.0000
+    },
+    {
+      "id": "W_IN_3",
+      "approach": "West",
+      "direction": "Inbound",
+      "lane_index": 3,
+      "width": 3.5000,
+      "length": 30.0000,
+      "start": [-49.5000, 0.0000, -13.0000],
+      "end": [-19.5000, 0.0000, -13.0000],
+      "heading": 0.0000
+    },
+    {
+      "id": "W_OUT_0",
+      "approach": "West",
+      "direction": "Outbound",
+      "lane_index": 0,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-19.5000, 0.0000, 2.5000],
+      "end": [-120.0000, 0.0000, 2.5000],
+      "heading": 3.1416
+    },
+    {
+      "id": "W_OUT_1",
+      "approach": "West",
+      "direction": "Outbound",
+      "lane_index": 1,
+      "width": 3.5000,
+      "length": 100.5000,
+      "start": [-19.5000, 0.0000, 6.0000],
+      "end": [-120.0000, 0.0000, 6.0000],
+      "heading": 3.1416
+    }
+  ],
+  "paths": [
+    {
+      "id": "PATH_N_IN_0_TO_E_OUT_0",
+      "from_lane": "N_IN_0",
+      "to_lane": "E_OUT_0",
+      "movement": "Left",
+      "p0": [2.5000, 0.0000, -19.5000],
+      "p1": [2.5000, 0.0000, -8.6813],
+      "p2": [8.6813, 0.0000, -2.5000],
+      "p3": [19.5000, 0.0000, -2.5000],
+      "length": 27.3486,
+      "min_radius": 13.1709
+    },
+    {
+      "id": "PATH_N_IN_1_TO_S_OUT_0",
+      "from_lane": "N_IN_1",
+      "to_lane": "S_OUT_0",
+      "movement": "Through",
+      "p0": [6.0000, 0.0000, -19.5000],
+      "p1": [6.0000, 0.0000, -6.4478],
+      "p2": [2.5000, 0.0000, 6.4478],
+      "p3": [2.5000, 0.0000, 19.5000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_N_IN_2_TO_S_OUT_1",
+      "from_lane": "N_IN_2",
+      "to_lane": "S_OUT_1",
+      "movement": "Through",
+      "p0": [9.5000, 0.0000, -19.5000],
+      "p1": [9.5000, 0.0000, -6.4478],
+      "p2": [6.0000, 0.0000, 6.4478],
+      "p3": [6.0000, 0.0000, 19.5000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_N_IN_3_TO_W_OUT_1",
+      "from_lane": "N_IN_3",
+      "to_lane": "W_OUT_1",
+      "movement": "Right",
+      "p0": [13.0000, 0.0000, -19.5000],
+      "p1": [13.0000, 0.0000, -3.8023],
+      "p2": [-3.8023, 0.0000, 6.0000],
+      "p3": [-19.5000, 0.0000, 6.0000],
+      "length": 45.7165,
+      "min_radius": 20.5732
+    },
+    {
+      "id": "PATH_E_IN_0_TO_S_OUT_0",
+      "from_lane": "E_IN_0",
+      "to_lane": "S_OUT_0",
+      "movement": "Left",
+      "p0": [19.5000, 0.0000, 2.5000],
+      "p1": [8.6813, 0.0000, 2.5000],
+      "p2": [2.5000, 0.0000, 8.6813],
+      "p3": [2.5000, 0.0000, 19.5000],
+      "length": 27.3486,
+      "min_radius": 13.1709
+    },
+    {
+      "id": "PATH_E_IN_1_TO_W_OUT_0",
+      "from_lane": "E_IN_1",
+      "to_lane": "W_OUT_0",
+      "movement": "Through",
+      "p0": [19.5000, 0.0000, 6.0000],
+      "p1": [6.4478, 0.0000, 6.0000],
+      "p2": [-6.4478, 0.0000, 2.5000],
+      "p3": [-19.5000, 0.0000, 2.5000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_E_IN_2_TO_W_OUT_1",
+      "from_lane": "E_IN_2",
+      "to_lane": "W_OUT_1",
+      "movement": "Through",
+      "p0": [19.5000, 0.0000, 9.5000],
+      "p1": [6.4478, 0.0000, 9.5000],
+      "p2": [-6.4478, 0.0000, 6.0000],
+      "p3": [-19.5000, 0.0000, 6.0000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_E_IN_3_TO_N_OUT_1",
+      "from_lane": "E_IN_3",
+      "to_lane": "N_OUT_1",
+      "movement": "Right",
+      "p0": [19.5000, 0.0000, 13.0000],
+      "p1": [3.8023, 0.0000, 13.0000],
+      "p2": [-6.0000, 0.0000, -3.8023],
+      "p3": [-6.0000, 0.0000, -19.5000],
+      "length": 45.7165,
+      "min_radius": 20.5732
+    },
+    {
+      "id": "PATH_S_IN_0_TO_W_OUT_0",
+      "from_lane": "S_IN_0",
+      "to_lane": "W_OUT_0",
+      "movement": "Left",
+      "p0": [-2.5000, 0.0000, 19.5000],
+      "p1": [-2.5000, 0.0000, 8.6813],
+      "p2": [-8.6813, 0.0000, 2.5000],
+      "p3": [-19.5000, 0.0000, 2.5000],
+      "length": 27.3486,
+      "min_radius": 13.1709
+    },
+    {
+      "id": "PATH_S_IN_1_TO_N_OUT_0",
+      "from_lane": "S_IN_1",
+      "to_lane": "N_OUT_0",
+      "movement": "Through",
+      "p0": [-6.0000, 0.0000, 19.5000],
+      "p1": [-6.0000, 0.0000, 6.4478],
+      "p2": [-2.5000, 0.0000, -6.4478],
+      "p3": [-2.5000, 0.0000, -19.5000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_S_IN_2_TO_N_OUT_1",
+      "from_lane": "S_IN_2",
+      "to_lane": "N_OUT_1",
+      "movement": "Through",
+      "p0": [-9.5000, 0.0000, 19.5000],
+      "p1": [-9.5000, 0.0000, 6.4478],
+      "p2": [-6.0000, 0.0000, -6.4478],
+      "p3": [-6.0000, 0.0000, -19.5000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_S_IN_3_TO_E_OUT_1",
+      "from_lane": "S_IN_3",
+      "to_lane": "E_OUT_1",
+      "movement": "Right",
+      "p0": [-13.0000, 0.0000, 19.5000],
+      "p1": [-13.0000, 0.0000, 3.8023],
+      "p2": [3.8023, 0.0000, -6.0000],
+      "p3": [19.5000, 0.0000, -6.0000],
+      "length": 45.7165,
+      "min_radius": 20.5732
+    },
+    {
+      "id": "PATH_W_IN_0_TO_N_OUT_0",
+      "from_lane": "W_IN_0",
+      "to_lane": "N_OUT_0",
+      "movement": "Left",
+      "p0": [-19.5000, 0.0000, -2.5000],
+      "p1": [-8.6813, 0.0000, -2.5000],
+      "p2": [-2.5000, 0.0000, -8.6813],
+      "p3": [-2.5000, 0.0000, -19.5000],
+      "length": 27.3486,
+      "min_radius": 13.1709
+    },
+    {
+      "id": "PATH_W_IN_1_TO_E_OUT_0",
+      "from_lane": "W_IN_1",
+      "to_lane": "E_OUT_0",
+      "movement": "Through",
+      "p0": [-19.5000, 0.0000, -6.0000],
+      "p1": [-6.4478, 0.0000, -6.0000],
+      "p2": [6.4478, 0.0000, -2.5000],
+      "p3": [19.5000, 0.0000, -2.5000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_W_IN_2_TO_E_OUT_1",
+      "from_lane": "W_IN_2",
+      "to_lane": "E_OUT_1",
+      "movement": "Through",
+      "p0": [-19.5000, 0.0000, -9.5000],
+      "p1": [-6.4478, 0.0000, -9.5000],
+      "p2": [6.4478, 0.0000, -6.0000],
+      "p3": [19.5000, 0.0000, -6.0000],
+      "length": 39.1567,
+      "min_radius": 1000000.0000
+    },
+    {
+      "id": "PATH_W_IN_3_TO_S_OUT_1",
+      "from_lane": "W_IN_3",
+      "to_lane": "S_OUT_1",
+      "movement": "Right",
+      "p0": [-19.5000, 0.0000, -13.0000],
+      "p1": [-3.8023, 0.0000, -13.0000],
+      "p2": [6.0000, 0.0000, 3.8023],
+      "p3": [6.0000, 0.0000, 19.5000],
+      "length": 45.7165,
+      "min_radius": 20.5732
+    }
+  ],
+  "stop_lines": [
+    {
+      "id": "STOP_North",
+      "approach": "North",
+      "position": [7.7500, 0.0000, -19.5000],
+      "normal": [0.0000, 0.0000, -1.0000],
+      "width": 14.0000
+    },
+    {
+      "id": "STOP_East",
+      "approach": "East",
+      "position": [19.5000, 0.0000, 7.7500],
+      "normal": [1.0000, 0.0000, 0.0000],
+      "width": 14.0000
+    },
+    {
+      "id": "STOP_South",
+      "approach": "South",
+      "position": [-7.7500, 0.0000, 19.5000],
+      "normal": [0.0000, 0.0000, 1.0000],
+      "width": 14.0000
+    },
+    {
+      "id": "STOP_West",
+      "approach": "West",
+      "position": [-19.5000, 0.0000, -7.7500],
+      "normal": [-1.0000, 0.0000, 0.0000],
+      "width": 14.0000
+    }
+  ],
+  "conflict_zones": [
+    {
+      "id": "CZ_PATH_N_IN_0_TO_E_OUT_0_X_PATH_S_IN_1_TO_N_OUT_0",
+      "center": [2.5000, 0.0000, -2.5000],
+      "path_a": "PATH_N_IN_0_TO_E_OUT_0",
+      "path_b": "PATH_S_IN_1_TO_N_OUT_0"
+    },
+    {
+      "id": "CZ_PATH_N_IN_0_TO_E_OUT_0_X_PATH_S_IN_2_TO_N_OUT_1",
+      "center": [6.0000, 0.0000, -2.5000],
+      "path_a": "PATH_N_IN_0_TO_E_OUT_0",
+      "path_b": "PATH_S_IN_2_TO_N_OUT_1"
+    },
+    {
+      "id": "CZ_PATH_S_IN_0_TO_W_OUT_0_X_PATH_N_IN_1_TO_S_OUT_0",
+      "center": [-2.5000, 0.0000, 2.5000],
+      "path_a": "PATH_S_IN_0_TO_W_OUT_0",
+      "path_b": "PATH_N_IN_1_TO_S_OUT_0"
+    },
+    {
+      "id": "CZ_PATH_S_IN_0_TO_W_OUT_0_X_PATH_N_IN_2_TO_S_OUT_1",
+      "center": [-6.0000, 0.0000, 2.5000],
+      "path_a": "PATH_S_IN_0_TO_W_OUT_0",
+      "path_b": "PATH_N_IN_2_TO_S_OUT_1"
+    },
+    {
+      "id": "CZ_PATH_E_IN_0_TO_S_OUT_0_X_PATH_W_IN_1_TO_E_OUT_0",
+      "center": [-2.5000, 0.0000, 2.5000],
+      "path_a": "PATH_E_IN_0_TO_S_OUT_0",
+      "path_b": "PATH_W_IN_1_TO_E_OUT_0"
+    },
+    {
+      "id": "CZ_PATH_E_IN_0_TO_S_OUT_0_X_PATH_W_IN_2_TO_E_OUT_1",
+      "center": [-2.5000, 0.0000, 6.0000],
+      "path_a": "PATH_E_IN_0_TO_S_OUT_0",
+      "path_b": "PATH_W_IN_2_TO_E_OUT_1"
+    },
+    {
+      "id": "CZ_PATH_W_IN_0_TO_N_OUT_0_X_PATH_E_IN_1_TO_W_OUT_0",
+      "center": [2.5000, 0.0000, -2.5000],
+      "path_a": "PATH_W_IN_0_TO_N_OUT_0",
+      "path_b": "PATH_E_IN_1_TO_W_OUT_0"
+    },
+    {
+      "id": "CZ_PATH_W_IN_0_TO_N_OUT_0_X_PATH_E_IN_2_TO_W_OUT_1",
+      "center": [2.5000, 0.0000, -6.0000],
+      "path_a": "PATH_W_IN_0_TO_N_OUT_0",
+      "path_b": "PATH_E_IN_2_TO_W_OUT_1"
+    },
+    {
+      "id": "CZ_PATH_N_IN_1_TO_S_OUT_0_X_PATH_E_IN_1_TO_W_OUT_0",
+      "center": [0.0000, 0.0000, 0.0000],
+      "path_a": "PATH_N_IN_1_TO_S_OUT_0",
+      "path_b": "PATH_E_IN_1_TO_W_OUT_0"
+    },
+    {
+      "id": "CZ_PATH_N_IN_2_TO_S_OUT_1_X_PATH_E_IN_2_TO_W_OUT_1",
+      "center": [0.0000, 0.0000, 0.0000],
+      "path_a": "PATH_N_IN_2_TO_S_OUT_1",
+      "path_b": "PATH_E_IN_2_TO_W_OUT_1"
+    },
+    {
+      "id": "CZ_PATH_S_IN_1_TO_N_OUT_0_X_PATH_W_IN_1_TO_E_OUT_0",
+      "center": [0.0000, 0.0000, 0.0000],
+      "path_a": "PATH_S_IN_1_TO_N_OUT_0",
+      "path_b": "PATH_W_IN_1_TO_E_OUT_0"
+    },
+    {
+      "id": "CZ_PATH_S_IN_2_TO_N_OUT_1_X_PATH_W_IN_2_TO_E_OUT_1",
+      "center": [0.0000, 0.0000, 0.0000],
+      "path_a": "PATH_S_IN_2_TO_N_OUT_1",
+      "path_b": "PATH_W_IN_2_TO_E_OUT_1"
+    }
+  ]
+}

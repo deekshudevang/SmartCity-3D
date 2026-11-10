@@ -94,37 +94,110 @@ void DayNightCycle::Update(float dt) {
     }
 }
 
+static inline float SmoothStep(float edge0, float edge1, float x) {
+    float t = std::clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+    return t * t * (3.0f - 2.0f * t);
+}
+
 void DayNightCycle::CalculateLighting() {
+    // 1. Solar Arc: Elevation and Azimuth
+    // Solar time angle: 0h = midnight, 6h = dawn, 12h = noon, 18h = dusk
     float sunAngle = (m_timeOfDay - 6.0f) / 24.0f * 2.0f * 3.14159265359f;
-    float sunHeight = std::sin(sunAngle);
+    m_sunElevation = std::sin(sunAngle); // in [-1.0, 1.0]
+    m_sunAzimuth = (m_timeOfDay - 6.0f) / 12.0f * 3.14159265359f;
 
-    glm::vec3 sunPos;
-    sunPos.x = std::cos(sunAngle) * 0.7f;
-    sunPos.y = sunHeight;
-    sunPos.z = 0.35f;
-    m_sunLight.direction = -glm::normalize(sunPos);
+    // Physical sun position on celestial sphere
+    float cosElev = std::sqrt(std::max(0.0f, 1.0f - m_sunElevation * m_sunElevation));
+    glm::vec3 sunPos(
+        cosElev * std::sin(m_sunAzimuth) * 0.85f,
+        m_sunElevation,
+        cosElev * std::cos(m_sunAzimuth) * 0.45f
+    );
+    m_sunDirection = -glm::normalize(sunPos);
 
-    if (sunHeight > 0.15f) {
-        float t = std::clamp((sunHeight - 0.15f) / 0.85f, 0.0f, 1.0f);
-        m_sunLight.color = glm::mix(glm::vec3(1.0f, 0.8f, 0.6f), glm::vec3(1.0f, 0.98f, 0.92f), t);
-        m_sunLight.intensity = glm::mix(0.85f, 1.15f, t);
-        m_sunLight.ambient = glm::mix(glm::vec3(0.25f, 0.28f, 0.32f), glm::vec3(0.35f, 0.38f, 0.42f), t);
-        m_skyColor = glm::mix(glm::vec3(0.5f, 0.6f, 0.75f), glm::vec3(0.42f, 0.64f, 0.88f), t);
+    // 2. Smooth piecewise Hermite curves through Dawn, Day, Dusk, Night
+    if (m_sunElevation > 0.15f) {
+        // High Day
+        float dayFactor = SmoothStep(0.15f, 0.85f, m_sunElevation);
+
+        m_sunLight.direction = m_sunDirection;
+        m_sunLight.color = glm::mix(glm::vec3(1.0f, 0.88f, 0.72f), glm::vec3(1.0f, 0.98f, 0.92f), dayFactor);
+        m_sunLight.intensity = glm::mix(0.85f, 1.20f, dayFactor);
+        m_sunLight.ambient = glm::mix(glm::vec3(0.20f, 0.22f, 0.28f), glm::vec3(0.32f, 0.35f, 0.40f), dayFactor);
+
+        m_skyTopColor = glm::mix(glm::vec3(0.25f, 0.45f, 0.75f), glm::vec3(0.18f, 0.42f, 0.88f), dayFactor);
+        m_horizonColor = glm::mix(glm::vec3(0.75f, 0.65f, 0.55f), glm::vec3(0.68f, 0.78f, 0.90f), dayFactor);
+        m_groundColor = glm::vec3(0.18f, 0.22f, 0.19f);
+        m_skyColor = m_horizonColor;
+
+        m_shadowFade = 1.0f;
+        m_streetlightFade = 0.0f;
+        m_windowEmissiveFade = 0.0f;
         m_streetlightsOn = false;
-    } else if (sunHeight > -0.1f) {
-        float t = (sunHeight + 0.1f) / 0.25f;
-        m_sunLight.color = glm::mix(glm::vec3(0.7f, 0.35f, 0.2f), glm::vec3(1.0f, 0.7f, 0.4f), t);
-        m_sunLight.intensity = glm::mix(0.2f, 0.85f, t);
-        m_sunLight.ambient = glm::mix(glm::vec3(0.12f, 0.12f, 0.18f), glm::vec3(0.25f, 0.28f, 0.32f), t);
-        m_skyColor = glm::mix(glm::vec3(0.18f, 0.15f, 0.28f), glm::vec3(0.5f, 0.45f, 0.65f), t);
-        m_streetlightsOn = (sunHeight < 0.05f);
+
+    } else if (m_sunElevation > -0.15f) {
+        // Dawn / Dusk Transition Interval: smooth blend between Day, Twilight, and Night
+        float u = SmoothStep(-0.15f, 0.15f, m_sunElevation); // 0 at deep night, 1 at day
+
+        glm::vec3 daySunColor(1.0f, 0.88f, 0.72f);
+        glm::vec3 duskSunColor(1.0f, 0.52f, 0.22f);
+        glm::vec3 nightMoonColor(0.42f, 0.55f, 0.82f);
+
+        glm::vec3 moonDir = glm::normalize(glm::vec3(0.25f, -0.92f, 0.30f));
+        glm::vec3 dayTop(0.25f, 0.45f, 0.75f);
+        glm::vec3 duskTop(0.10f, 0.12f, 0.28f);
+        glm::vec3 nightTop(0.015f, 0.020f, 0.045f);
+
+        glm::vec3 dayHorizon(0.75f, 0.65f, 0.55f);
+        glm::vec3 duskHorizon(0.85f, 0.42f, 0.20f);
+        glm::vec3 nightHorizon(0.035f, 0.045f, 0.085f);
+
+        if (u >= 0.5f) {
+            float t = (u - 0.5f) * 2.0f; // 0 at sunset/dusk, 1 at full day
+            m_sunLight.direction = m_sunDirection;
+            m_sunLight.color = glm::mix(duskSunColor, daySunColor, t);
+            m_sunLight.intensity = glm::mix(0.35f, 0.85f, t);
+            m_sunLight.ambient = glm::mix(glm::vec3(0.08f, 0.09f, 0.14f), glm::vec3(0.20f, 0.22f, 0.28f), t);
+
+            m_skyTopColor = glm::mix(duskTop, dayTop, t);
+            m_horizonColor = glm::mix(duskHorizon, dayHorizon, t);
+            m_groundColor = glm::mix(glm::vec3(0.08f, 0.10f, 0.10f), glm::vec3(0.18f, 0.22f, 0.19f), t);
+        } else {
+            float t = u * 2.0f; // 0 at deep night, 1 at sunset/dusk
+            m_sunLight.direction = glm::normalize(glm::mix(moonDir, m_sunDirection, t));
+            m_sunLight.color = glm::mix(nightMoonColor, duskSunColor, t);
+            m_sunLight.intensity = glm::mix(0.12f, 0.35f, t);
+            m_sunLight.ambient = glm::mix(glm::vec3(0.04f, 0.05f, 0.08f), glm::vec3(0.08f, 0.09f, 0.14f), t);
+
+            m_skyTopColor = glm::mix(nightTop, duskTop, t);
+            m_horizonColor = glm::mix(nightHorizon, duskHorizon, t);
+            m_groundColor = glm::mix(glm::vec3(0.010f, 0.012f, 0.018f), glm::vec3(0.08f, 0.10f, 0.10f), t);
+        }
+        m_skyColor = m_horizonColor;
+
+        // Shadow fades out smoothly as sun reaches horizon
+        m_shadowFade = SmoothStep(0.0f, 0.15f, m_sunElevation);
+
+        // Streetlights and window lights fade in smoothly
+        m_streetlightFade = 1.0f - u;
+        m_windowEmissiveFade = 1.0f - u;
+        m_streetlightsOn = (m_streetlightFade > 0.1f);
+
     } else {
-        // Night (Moon illumination)
-        m_sunLight.direction = glm::normalize(glm::vec3(0.2f, -1.0f, 0.4f));
-        m_sunLight.color = glm::vec3(0.35f, 0.45f, 0.65f);
-        m_sunLight.intensity = 0.18f;
-        m_sunLight.ambient = glm::vec3(0.06f, 0.07f, 0.10f);
-        m_skyColor = glm::vec3(0.03f, 0.04f, 0.07f);
+        // Deep Night: Sun is below horizon, soft Moon illumination
+        m_sunLight.direction = glm::normalize(glm::vec3(0.25f, -0.92f, 0.30f));
+        m_sunLight.color = glm::vec3(0.42f, 0.55f, 0.82f); // Cool moonlight
+        m_sunLight.intensity = 0.12f;
+        m_sunLight.ambient = glm::vec3(0.04f, 0.05f, 0.08f);
+
+        m_skyTopColor = glm::vec3(0.015f, 0.020f, 0.045f);
+        m_horizonColor = glm::vec3(0.035f, 0.045f, 0.085f);
+        m_groundColor = glm::vec3(0.010f, 0.012f, 0.018f);
+        m_skyColor = m_horizonColor;
+
+        m_shadowFade = 0.0f; // No sun shadow when sun is below horizon
+        m_streetlightFade = 1.0f;
+        m_windowEmissiveFade = 1.0f;
         m_streetlightsOn = true;
     }
 }

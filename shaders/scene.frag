@@ -72,6 +72,14 @@ uniform vec4 u_ColorOverride;
 uniform int u_UseColorOverride;
 uniform int u_UseBlinnPhong; // 1 = Blinn-Phong (default), 0 = Phong
 
+// Phase 6 Visual Effects Uniforms
+uniform float u_ShadowFade;      // 0.0 at night / below horizon, 1.0 in full daylight
+uniform int   u_FogEnabled;      // 1 = enabled, 0 = disabled
+uniform float u_FogDensity;      // Exponential-squared fog density
+uniform vec3  u_FogColor;        // Horizon-matched fog color
+uniform float u_RainWetness;     // 0.0 = dry, 1.0 = heavy wet sheen
+uniform float u_WindowEmissive;  // 0.0 = day, 1.0 = glowing night windows
+
 float CalculateShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
@@ -116,14 +124,22 @@ void main() {
     float shininess = (u_UseMaterial == 1) ? max(u_Material.shininess, 1.0) : max(u_Shininess, 1.0);
     float specStrength = (u_UseMaterial == 1) ? 1.0 : u_SpecularStrength;
 
+    // Wet road / rain sheen effect: reduced roughness (higher shininess) and amplified specular reflection
+    if (u_RainWetness > 0.0) {
+        shininess = mix(shininess, max(shininess * 2.2, 64.0), u_RainWetness);
+        specStrength = mix(specStrength, specStrength * 1.85 + 0.35, u_RainWetness);
+    }
+
     vec3 normal = normalize(v_Normal);
     vec3 viewDir = normalize(u_CameraPos - v_FragPos);
 
-    // 1. Directional Light
+    // 1. Directional Light with Horizon Shadow Fade
     vec3 lightDir = normalize(-u_DirLight.direction);
     float diff = max(dot(normal, lightDir), 0.0);
     float spec = CalculateSpecular(normal, lightDir, viewDir, shininess);
     float shadow = CalculateShadow(v_FragPosLightSpace, normal, lightDir);
+    // When the sun is below the horizon or setting, fade shadow smoothly
+    shadow *= clamp(u_ShadowFade, 0.0, 1.0);
 
     vec3 ambient = u_DirLight.ambient * baseColor.rgb;
     vec3 diffuse = u_DirLight.color * diff * u_DirLight.intensity * baseColor.rgb;
@@ -172,6 +188,23 @@ void main() {
                 result += (sDiffuse + sSpecular);
             }
         }
+    }
+
+    // 4. Night Window Glow for Urban Buildings
+    if (u_WindowEmissive > 0.01) {
+        // Window bands have higher blue/tint reflectance (> 0.60, > 0.70)
+        if (baseColor.r > 0.55 && baseColor.g > 0.65 && baseColor.b > 0.72) {
+            vec3 warmInteriorLight = vec3(1.0, 0.88, 0.58) * 0.95;
+            result += warmInteriorLight * u_WindowEmissive;
+        }
+    }
+
+    // 5. Exponential-Squared Fog Blending
+    if (u_FogEnabled == 1 && u_FogDensity > 0.0001) {
+        float dist = length(u_CameraPos - v_FragPos);
+        float fogFactor = exp(-pow(dist * u_FogDensity, 2.0));
+        fogFactor = clamp(fogFactor, 0.0, 1.0);
+        result = mix(u_FogColor, result, fogFactor);
     }
 
     o_Color = vec4(result, baseColor.a);

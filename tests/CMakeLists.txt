@@ -10,7 +10,7 @@ macro(add_smartcity_unit_test test_name test_source)
         "${CMAKE_CURRENT_SOURCE_DIR}/../external/glad/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../external/glm"
     )
-    add_test(NAME ${test_name} COMMAND ${test_name})
+    add_test(NAME ${test_name} COMMAND ${test_name} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/..")
 endmacro()
 
 add_smartcity_unit_test(test_math unit/test_math.cpp)
@@ -29,3 +29,4 @@ add_smartcity_unit_test(test_obb unit/test_obb.cpp)
 add_smartcity_unit_test(test_vehicle_sim unit/test_vehicle_sim.cpp)
 add_smartcity_unit_test(test_traffic_signals unit/test_traffic_signals.cpp)
 add_smartcity_unit_test(test_pedestrians unit/test_pedestrians.cpp)
+add_smartcity_unit_test(test_environment_fx unit/test_environment_fx.cpp)

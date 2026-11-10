@@ -9,6 +9,7 @@ struct AppCommandLineArgs {
     int count = 0;
     char** args = nullptr;
     bool headless = false;
+    bool screenshots = false;
     std::string configPath = "assets/config/simulation_config.json";
     std::string intersectionPath = "assets/config/intersection_config.json";
 };

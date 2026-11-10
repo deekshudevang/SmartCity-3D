@@ -7,6 +7,10 @@ namespace SmartCity::gfx {
 ShadowMap::ShadowMap(uint32_t width, uint32_t height)
     : m_fbo(0), m_depthTexture(0), m_width(width), m_height(height)
 {
+    if (glad_glGenFramebuffers == nullptr) {
+        return; // Headless environment guard (null GLAD pointers in CLI unit tests)
+    }
+
     glGenFramebuffers(1, &m_fbo);
 
     glGenTextures(1, &m_depthTexture);
@@ -37,17 +41,18 @@ ShadowMap::ShadowMap(uint32_t width, uint32_t height)
 }
 
 ShadowMap::~ShadowMap() {
-    if (m_fbo != 0) {
+    if (m_fbo != 0 && glad_glDeleteFramebuffers != nullptr) {
         glDeleteFramebuffers(1, &m_fbo);
         m_fbo = 0;
     }
-    if (m_depthTexture != 0) {
+    if (m_depthTexture != 0 && glad_glDeleteTextures != nullptr) {
         glDeleteTextures(1, &m_depthTexture);
         m_depthTexture = 0;
     }
 }
 
 void ShadowMap::BindForWriting() {
+    if (glad_glBindFramebuffer == nullptr) return;
     glViewport(0, 0, m_width, m_height);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -55,23 +60,37 @@ void ShadowMap::BindForWriting() {
 }
 
 void ShadowMap::Unbind(int viewportWidth, int viewportHeight) {
+    if (glad_glBindFramebuffer == nullptr) return;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, viewportWidth, viewportHeight);
     glCullFace(GL_BACK);
 }
 
 void ShadowMap::BindTexture(uint32_t textureSlot) const {
+    if (glad_glBindTexture == nullptr) return;
     glActiveTexture(GL_TEXTURE0 + textureSlot);
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 }
 
 glm::mat4 ShadowMap::CalculateLightSpaceMatrix(const glm::vec3& lightDir, const glm::vec3& targetCenter) const {
-    float orthoSize = 65.0f;
-    glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, 220.0f);
+    float orthoSize = 95.0f;
+    glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, 240.0f);
 
     glm::vec3 normalizedLightDir = glm::normalize(lightDir);
-    glm::vec3 lightPos = targetCenter - normalizedLightDir * 90.0f;
-    glm::mat4 lightView = glm::lookAt(lightPos, targetCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 up = (std::abs(normalizedLightDir.y) > 0.99f) ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 lightPos = targetCenter - normalizedLightDir * 110.0f;
+    glm::mat4 lightView = glm::lookAt(lightPos, targetCenter, up);
+
+    // Texel Snapping (Shadow Stabilization to eliminate camera shimmering)
+    glm::vec4 shadowOrigin = lightProjection * lightView * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    shadowOrigin *= (static_cast<float>(m_width) * 0.5f);
+    glm::vec4 roundedOrigin = glm::round(shadowOrigin);
+    glm::vec4 roundOffset = roundedOrigin - shadowOrigin;
+    roundOffset *= (2.0f / static_cast<float>(m_width));
+    roundOffset.z = 0.0f;
+    roundOffset.w = 0.0f;
+
+    lightProjection[3] += roundOffset;
 
     return lightProjection * lightView;
 }

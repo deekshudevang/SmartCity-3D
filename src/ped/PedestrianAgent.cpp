@@ -71,3 +71,4 @@ void PedestrianAgent::Update(float dt, traffic::PedSignalAspect signalState) {
 }
 
 } // namespace SmartCity::ped
+

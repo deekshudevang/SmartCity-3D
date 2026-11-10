@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -27,6 +28,9 @@ public:
     bool IsValid() const { return m_rendererId != 0; }
 
     static std::string ReadFile(const std::string& filepath);
+
+    // Startup Validator: confirms all project shader files exist and compile
+    static bool ValidateAllShaders(std::vector<std::string>& failedShaders);
 
 private:
     bool Compile(const std::string& vertexSource, const std::string& fragmentSource);

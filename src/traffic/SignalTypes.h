@@ -75,3 +75,4 @@ struct SignalTransitionRecord {
 };
 
 } // namespace SmartCity::traffic
+

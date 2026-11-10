@@ -82,8 +82,19 @@ public:
     bool IsPaused() const { return m_isPaused; }
 
     const DirectionalLight& GetLight() const { return m_sunLight; }
+    glm::vec3 GetSunDirection() const { return m_sunDirection; }
+    float GetSunElevation() const { return m_sunElevation; }
+    float GetSunAzimuth() const { return m_sunAzimuth; }
+
     glm::vec3 GetClearColor() const { return m_skyColor; }
+    glm::vec3 GetSkyTopColor() const { return m_skyTopColor; }
+    glm::vec3 GetHorizonColor() const { return m_horizonColor; }
+    glm::vec3 GetGroundColor() const { return m_groundColor; }
+
     bool AreStreetlightsActive() const { return m_streetlightsOn; }
+    float GetStreetlightIntensity() const { return m_streetlightFade; }
+    float GetWindowEmissiveIntensity() const { return m_windowEmissiveFade; }
+    float GetSunShadowFade() const { return m_shadowFade; }
 
 private:
     void CalculateLighting();
@@ -93,8 +104,19 @@ private:
     bool m_isPaused;
 
     DirectionalLight m_sunLight;
+    glm::vec3 m_sunDirection{ 0.0f, -1.0f, 0.0f };
+    float m_sunElevation{ 0.0f };
+    float m_sunAzimuth{ 0.0f };
+
     glm::vec3 m_skyColor;
-    bool m_streetlightsOn;
+    glm::vec3 m_skyTopColor;
+    glm::vec3 m_horizonColor;
+    glm::vec3 m_groundColor;
+
+    bool m_streetlightsOn{ false };
+    float m_streetlightFade{ 0.0f };
+    float m_windowEmissiveFade{ 0.0f };
+    float m_shadowFade{ 1.0f };
 };
 
 } // namespace SmartCity::gfx

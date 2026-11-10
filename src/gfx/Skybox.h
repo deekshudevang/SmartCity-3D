@@ -23,6 +23,12 @@ public:
     void SetHorizonColor(const glm::vec3& col) { m_horizonColor = col; }
     void SetGroundColor(const glm::vec3& col) { m_groundColor = col; }
 
+    void SetSunParams(const glm::vec3& sunDir, const glm::vec3& sunColor, float nightFactor) {
+        m_sunDir = sunDir;
+        m_sunColor = sunColor;
+        m_nightFactor = nightFactor;
+    }
+
     bool HasCubemap() const { return m_hasCubemap; }
     uint32_t GetCubemapId() const { return m_cubemapId; }
 
@@ -41,6 +47,10 @@ private:
     glm::vec3 m_topColor;
     glm::vec3 m_horizonColor;
     glm::vec3 m_groundColor;
+
+    glm::vec3 m_sunDir{ 0.0f, -1.0f, 0.0f };
+    glm::vec3 m_sunColor{ 1.0f, 0.95f, 0.85f };
+    float m_nightFactor{ 0.0f };
 };
 
 } // namespace SmartCity::gfx

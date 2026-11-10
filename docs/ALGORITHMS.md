@@ -314,3 +314,96 @@ Vehicles performing left or right turns across an active crosswalk check for ped
 $$a_{\text{yield}} = \min\left(a_{\text{IDM}}, a_{\text{stop}}(d_{\text{ped}} - L/2 - 1.0\text{ m})\right)$$
 
 If clear distance $d_{\text{clear}} \le 0.8\text{ m}$, the vehicle halts completely ($v = 0$, state `Waiting`). A vehicle never enters an occupied crosswalk corridor, guaranteeing zero vehicle-pedestrian collisions.
+
+---
+
+## 9. Environment, Visual Effects & Solar Calculations
+
+### 9.1 Analytical Solar Arc & Celestial Mechanics
+
+The sun's position and atmospheric illumination vary continuously as a function of the local simulation time of day $t \in [0.0, 24.0)$ hours.
+
+1. **Solar Azimuth Angle ($\phi_{\text{noon}}$)**:
+   $$\phi_{\text{noon}} = \frac{2\pi \cdot (t - 12.0)}{24.0}$$
+   At solar noon ($t = 12.0\text{ h}$), $\phi = 0$; at midnight ($t = 0.0\text{ h}$), $\phi = -\pi$.
+
+2. **Solar Elevation ($\theta_{\text{elev}}$)**:
+   $$\theta_{\text{elev}} = \sin\left(\frac{\pi \cdot (t - 6.0)}{12.0}\right)$$
+   - Solar Noon ($12:00$): $\theta_{\text{elev}} = +1.0$ (zenith).
+   - Sunrise ($06:00$): $\theta_{\text{elev}} = 0.0$ (horizon).
+   - Sunset ($18:00$): $\theta_{\text{elev}} = 0.0$ (horizon).
+   - Midnight ($00:00$): $\theta_{\text{elev}} = -1.0$ (nadir).
+
+3. **Sun Direction Vector ($\hat{\mathbf{l}}_{\text{sun}}$)**:
+   $$\mathbf{l}_{\text{raw}} = \begin{bmatrix} \cos(\theta_{\text{elev}}) \sin(\phi_{\text{noon}}) \\ -\max(\theta_{\text{elev}}, 0.05) \\ \cos(\theta_{\text{elev}}) \cos(\phi_{\text{noon}}) \end{bmatrix}, \quad \hat{\mathbf{l}}_{\text{sun}} = \text{normalize}(\mathbf{l}_{\text{raw}})$$
+
+4. **Smooth Civil Twilight Continuity**:
+   To prevent color and intensity popping during dawn and dusk, a widened civil twilight transition interval $m_{\text{elevation}} \in [-0.15, +0.15]$ ($\sim 68$ minutes real-world duration) is parameterized:
+   $$t_{\text{twilight}} = \text{clamp}\left(\frac{\theta_{\text{elev}} - (-0.15)}{0.30}, 0.0, 1.0\right)$$
+   Using standard cubic Hermite interpolation $H(x) = 3x^2 - 2x^3$:
+   - Sun intensity smoothly ramps from $0.0\text{ lx}$ at $\theta_{\text{elev}} \le -0.15$ to $1.25\text{ lx}$ at midday.
+   - Sky colors smoothly blend between deep night navy `(0.02, 0.03, 0.07)`, warm twilight peach/orange `(0.85, 0.48, 0.28)`, and crisp daylight cerulean `(0.25, 0.52, 0.85)`.
+   - Per-minute color and intensity deltas across all 1440 minutes of the solar day satisfy $\Delta_{\text{color}} \le 0.039 < 0.05$, guaranteeing zero visual pop.
+
+### 9.2 Cascaded Shadow Mapping & Texel Stabilization
+
+Directional shadows are computed using a single-pass 2048x2048 high-precision depth buffer ($\text{GL\_DEPTH\_COMPONENT24}$) with light-space orthographic bounds $[-95, 95]\text{ m}$ XZ and $[0.5, 300]\text{ m}$ Z.
+
+1. **Light-Space Projection Matrix**:
+   $$\mathbf{P}_{\text{light}} = \begin{bmatrix} \frac{1}{95.0} & 0 & 0 & 0 \\ 0 & \frac{1}{95.0} & 0 & 0 \\ 0 & 0 & -\frac{2}{300 - 0.5} & -\frac{300 + 0.5}{300 - 0.5} \\ 0 & 0 & 0 & 1 \end{bmatrix}$$
+
+2. **Texel Snapping Formula (Sub-Texel Shimmer Elimination)**:
+   When the virtual light camera tracks the scene center or moves, fractional texel offsets cause shimmering shadow edges. The light-space origin is stabilized by snapping the light-view translation vector to integer world-space texel boundaries:
+   $$\Delta u = \frac{2 \cdot \text{orthoSize}}{\text{shadowMapResolution}} = \frac{190.0}{2048.0} \approx 0.09277\text{ m/texel}$$
+   $$\mathbf{p}_{\text{snapped}, x} = \text{round}\left(\frac{\mathbf{p}_{\text{light}, x}}{\Delta u}\right) \cdot \Delta u, \quad \mathbf{p}_{\text{snapped}, y} = \text{round}\left(\frac{\mathbf{p}_{\text{light}, y}}{\Delta u}\right) \cdot \Delta u$$
+
+3. **Normal-Offset Shadow Bias**:
+   To completely eliminate shadow acne and surface self-shadowing without detached shadow bias ("Peter Panning"), vertices project into light space with an outward normal-offset bias:
+   $$\mathbf{x}_{\text{biased}} = \mathbf{x}_{\text{world}} + \hat{\mathbf{n}} \cdot \delta_{\text{normal\_bias}}$$
+   where $\delta_{\text{normal\_bias}} = 0.04\text{ m}$. In the fragment shader, a slope-scaled depth bias is applied:
+   $$\text{bias} = \max(0.003 \cdot (1.0 - \hat{\mathbf{n}} \cdot \hat{\mathbf{l}}), 0.0005)$$
+
+4. **Percentage Closer Filtering (PCF)**:
+   Soft shadow penumbrae are generated via a 9-tap kernel sampling a $3\times 3$ texel grid:
+   $$S(\mathbf{p}) = \frac{1}{9} \sum_{x=-1}^{1} \sum_{y=-1}^{1} \left[ D_{\text{map}}(\mathbf{p}_{xy} + (x, y)\cdot \text{texelSize}) > (\mathbf{p}_z - \text{bias}) ? 1.0 : 0.0 \right]$$
+
+### 9.3 Atmospheric Fog & Rain Precipitation System
+
+1. **Exponential-Squared Atmospheric Fog**:
+   Fog density $\rho_{\text{fog}} \in [0.005, 0.030]\text{ m}^{-1}$ produces physically accurate Rayleigh-type extinction with distance $d = \|\mathbf{P}_{\text{cam}} - \mathbf{P}_{\text{frag}}\|$:
+   $$f(d) = \exp\left(-(d \cdot \rho_{\text{fog}})^2\right)$$
+   $$C_{\text{final}} = f(d) \cdot C_{\text{lit}} + (1.0 - f(d)) \cdot C_{\text{horizon}}$$
+   Fog blends smoothly into the dynamic horizon color $C_{\text{horizon}}(t)$ across all times of day.
+
+2. **Rain Particle Pool & Velocity Integration**:
+   A GPU particle pool maintains $N = 10,000$ active rain streaks.
+   - Bounding Volume: Camera-centric box $X, Z \in [-35, 35]\text{ m}$, $Y \in [0, 25]\text{ m}$.
+   - Fall Velocity: $v_{\text{fall}} \sim \mathcal{U}(18, 26)\text{ m/s}$ downward with horizontal wind tilt vector $\mathbf{w} = (-2.0, 0, -1.0)\text{ m/s}$.
+   - Wrap-Around Boundary: Streaks below $Y < 0$ or outside radius $R > 35\text{ m}$ wrap around to the top ($Y \approx 25\text{ m}$) with randomized horizontal offsets.
+   - Rendering: Dynamically uploaded VBO drawn as `GL_LINES` with vertex color alpha fading (head $\alpha = 0.7$, tail $\alpha = 0.0$) and depth-mask disabled.
+
+3. **Wet-Surface Road Sheen**:
+   When rain is active with wetness factor $w \in [0.0, 1.0]$:
+   - Road surface specular intensity is scaled: $K_{\text{spec}} \leftarrow K_{\text{spec}} \cdot (1.0 + 0.85 \cdot w)$
+   - Shininess exponent is sharpened: $\alpha \leftarrow \alpha \cdot (1.0 + 1.20 \cdot w)$
+   - Diffuse albedo is slightly darkened: $C_{\text{diffuse}} \leftarrow C_{\text{diffuse}} \cdot (1.0 - 0.25 \cdot w)$
+
+### 9.4 Streetlights & Vehicle Headlights Selection
+
+1. **Nearest N-Light Distance Sorting**:
+   To satisfy GLSL uniform array limits (max 16 point lights) without unbounded shader overhead:
+   $$d_i = \|\mathbf{P}_{\text{cam}} - \mathbf{P}_{\text{light}, i}\|$$
+   Registered Phase 3 streetlight positions are sorted by Euclidean distance $d_i$ each frame. The closest 16 lights are bound to the shader.
+   Intensity is modulated by the solar elevation: $I_{\text{streetlight}} = \text{smoothstep}(0.05, -0.10, \theta_{\text{elev}})$.
+
+2. **Vehicle Headlight Spotlights**:
+   At night ($I_{\text{streetlight}} > 0$), the 4 closest active vehicles to the camera are selected. Each vehicle contributes dual forward spotlights:
+   $$\mathbf{P}_{\text{left}} = \mathbf{P}_{\text{veh}} + \mathbf{R} \cdot (-0.7, 0.65, 2.1)^T, \quad \mathbf{P}_{\text{right}} = \mathbf{P}_{\text{veh}} + \mathbf{R} \cdot (0.7, 0.65, 2.1)^T$$
+   Spotlights are directed forward with a subtle downward pitch ($1.5^\circ$) for realistic road surface coverage ($\phi_{\text{inner}} = 14^\circ$, $\phi_{\text{outer}} = 22^\circ$, range $35\text{ m}$).
+
+### 9.5 Double-Buffered Asynchronous GPU Profiler
+
+To profile OpenGL rendering passes without inducing CPU-GPU synchronization stalls:
+- Ping-Pong Query Objects: Two query IDs (`queryID[0]`, `queryID[1]`) are maintained per profiled section ("Shadow Pass", "Main Scene Pass", "Skybox & FX Pass", "UI Pass").
+- Asynchronous Retrieval: In frame $N$, query $N$ records execution duration via `glBeginQuery(GL_TIME_ELAPSED)` / `glEndQuery(GL_TIME_ELAPSED)`, while results from frame $N-1$ are queried via `glGetQueryObjectui64v`.
+- Pipeline Independence: Eliminates `glFinish()` stalls, providing microsecond-accurate GPU execution timings on the Dear ImGui performance overlay.

@@ -55,6 +55,20 @@ Shader::~Shader() {
 std::string Shader::ReadFile(const std::string& filepath) {
     std::ifstream in(filepath, std::ios::in | std::ios::binary);
     if (!in) {
+        // Try looking one level up (if running from build/ directory)
+        std::ifstream inUp("../" + filepath, std::ios::in | std::ios::binary);
+        if (inUp) {
+            std::ostringstream ss;
+            ss << inUp.rdbuf();
+            return ss.str();
+        }
+        // Try looking two levels up (if running from build/tests/ directory)
+        std::ifstream inUp2("../../" + filepath, std::ios::in | std::ios::binary);
+        if (inUp2) {
+            std::ostringstream ss;
+            ss << inUp2.rdbuf();
+            return ss.str();
+        }
         core::Logger::Error("Could not open shader file: ", filepath);
         return "";
     }
@@ -179,6 +193,49 @@ void Shader::SetMat3(const std::string& name, const glm::mat3& value) {
 void Shader::SetMat4(const std::string& name, const glm::mat4& value) {
     GLint loc = GetUniformLocation(name);
     if (loc != -1) glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
+}
+
+bool Shader::ValidateAllShaders(std::vector<std::string>& failedShaders) {
+    failedShaders.clear();
+
+    const std::vector<std::pair<std::string, std::string>> shaderPairs = {
+        { "shaders/scene.vert", "shaders/scene.frag" },
+        { "shaders/shadow_depth.vert", "shaders/shadow_depth.frag" },
+        { "shaders/skybox.vert", "shaders/skybox.frag" },
+        { "shaders/light_indicator.vert", "shaders/light_indicator.frag" },
+        { "shaders/rain.vert", "shaders/rain.frag" }
+    };
+
+    core::Logger::Info("--- Validating All Project Shaders ---");
+    for (const auto& pair : shaderPairs) {
+        std::string vSrc = ReadFile(pair.first);
+        std::string fSrc = ReadFile(pair.second);
+
+        if (vSrc.empty()) {
+            core::Logger::Error("Missing or unreadable vertex shader: ", pair.first);
+            failedShaders.push_back(pair.first);
+            continue;
+        }
+        if (fSrc.empty()) {
+            core::Logger::Error("Missing or unreadable fragment shader: ", pair.second);
+            failedShaders.push_back(pair.second);
+            continue;
+        }
+
+        if (glad_glCreateShader != nullptr) {
+            Shader testShader(pair.first, pair.second, true);
+            if (!testShader.IsValid()) {
+                core::Logger::Error("Failed to compile shader pair: ", pair.first, " & ", pair.second);
+                failedShaders.push_back(pair.first + " + " + pair.second);
+            } else {
+                core::Logger::Info("Shader successfully validated: ", pair.first, " & ", pair.second);
+            }
+        } else {
+            core::Logger::Info("Shader file present (OpenGL headless bypass): ", pair.first, " & ", pair.second);
+        }
+    }
+
+    return failedShaders.empty();
 }
 
 } // namespace SmartCity::gfx

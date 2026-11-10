@@ -107,6 +107,8 @@ set(SMARTCITY_CORE_SOURCES
     src/traffic/TrafficSignalController.cpp
     src/ped/PedestrianAgent.cpp
     src/ped/PedestrianManager.cpp
+    src/fx/RainSystem.cpp
+    src/gfx/GpuProfiler.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS
@@ -145,6 +147,8 @@ set(SMARTCITY_CORE_HEADERS
     src/traffic/TrafficSignalController.h
     src/ped/PedestrianAgent.h
     src/ped/PedestrianManager.h
+    src/fx/RainSystem.h
+    src/gfx/GpuProfiler.h
 )
 
 add_library(SmartCityCore STATIC

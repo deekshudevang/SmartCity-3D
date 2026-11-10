@@ -21,15 +21,19 @@ void main() {
     vec4 worldPos = u_Model * vec4(a_Position, 1.0);
     v_FragPos = worldPos.xyz;
 
+    vec3 normal;
     if (u_HasNormalMatrix == 1) {
-        v_Normal = normalize(u_NormalMatrix * a_Normal);
+        normal = normalize(u_NormalMatrix * a_Normal);
     } else {
-        v_Normal = normalize(mat3(transpose(inverse(u_Model))) * a_Normal);
+        normal = normalize(mat3(transpose(inverse(u_Model))) * a_Normal);
     }
-
+    v_Normal = normal;
     v_TexCoord = a_TexCoord;
     v_Color = a_Color;
-    v_FragPosLightSpace = u_LightSpaceMatrix * worldPos;
+
+    // Normal-offset bias in light space to prevent shadow acne and self-shadowing
+    vec4 biasedPos = worldPos + vec4(normal * 0.04, 0.0);
+    v_FragPosLightSpace = u_LightSpaceMatrix * biasedPos;
 
     gl_Position = u_ViewProjection * worldPos;
 }
