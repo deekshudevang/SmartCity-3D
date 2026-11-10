@@ -31,7 +31,7 @@
 
 ---
 
-## Phase 2 | Status: VERIFIED | Date: 2026-11-10
+## Phase 2 | Status: VERIFIED | Date: 2026-11-10 | Commit: `9a34f41`
 
 ### Requirement Table
 | ID | Requirement | Status | Evidence (file/command) |
