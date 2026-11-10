@@ -114,6 +114,16 @@ set(SMARTCITY_CORE_SOURCES
     src/algos/RayCasting.cpp
     src/analytics/AnalyticsEngine.cpp
     src/analytics/ExperimentRunner.cpp
+    src/vehicles/VehiclePreset.cpp
+    src/vehicles/VehiclePresetImporter.cpp
+    src/vehicles/VehiclePresetRegistry.cpp
+    src/vehicles/VehicleAssetRegistry.cpp
+    src/vehicles/VehicleCustomization.cpp
+    src/vehicles/VehicleLibrary.cpp
+    src/ui/VehicleGalleryPanel.cpp
+    src/ui/VehicleDetailsPanel.cpp
+    src/ui/VehiclePreviewPanel.cpp
+    src/ui/VehicleCustomizationPanel.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS
@@ -159,6 +169,16 @@ set(SMARTCITY_CORE_HEADERS
     src/algos/RayCasting.h
     src/analytics/AnalyticsEngine.h
     src/analytics/ExperimentRunner.h
+    include/smartcity/vehicles/VehiclePreset.h
+    include/smartcity/vehicles/VehiclePresetImporter.h
+    include/smartcity/vehicles/VehiclePresetRegistry.h
+    include/smartcity/vehicles/VehicleAssetRegistry.h
+    include/smartcity/vehicles/VehicleCustomization.h
+    include/smartcity/vehicles/VehicleLibrary.h
+    src/ui/VehicleGalleryPanel.h
+    src/ui/VehicleDetailsPanel.h
+    src/ui/VehiclePreviewPanel.h
+    src/ui/VehicleCustomizationPanel.h
 )
 
 add_library(SmartCityCore STATIC
@@ -169,6 +189,7 @@ add_library(SmartCityCore STATIC
 target_include_directories(SmartCityCore PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external"
     "${GLAD_DIR}/include"
     "${STB_DIR}"
 )

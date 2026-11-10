@@ -119,6 +119,7 @@ public:
     const VehicleDimensions& GetDimensions() const { return m_dimensions; }
     const VehiclePhysics& GetPhysics() const { return m_physics; }
     const glm::vec4& GetColor() const { return m_color; }
+    void SetColor(const glm::vec4& color) { m_color = color; }
 
     VehicleState GetState() const { return m_state; }
     void SetState(VehicleState state) { m_state = state; }

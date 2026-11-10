@@ -32,6 +32,11 @@
 #include "algos/LineDrawing.h"
 #include "algos/BezierCurve.h"
 #include "algos/RayCasting.h"
+#include "smartcity/vehicles/VehicleLibrary.h"
+#include "ui/VehicleGalleryPanel.h"
+#include "ui/VehicleDetailsPanel.h"
+#include "ui/VehiclePreviewPanel.h"
+#include "ui/VehicleCustomizationPanel.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
@@ -206,6 +211,14 @@ int Application::Run() {
     vehicleManager->SetVehicleCompletedCallback([&analyticsEngine](const sim::Vehicle& v) {
         analyticsEngine.RegisterTripCompletion(v.GetWaitingTime());
     });
+
+    // Initialize Complete Vehicle Library System
+    vehicles::VehicleLibrary::Get().Initialize(
+        "assets/vehicle_presets/source_json",
+        "assets/vehicle_presets/normalized",
+        "assets/vehicle_presets/vehicle_assets.json",
+        "assets/vehicle_presets/import_report.json"
+    );
 
     // Lighting Environment
     gfx::LightingEnvironment lightingEnv;
@@ -528,6 +541,20 @@ int Application::Run() {
         static bool showCgAlgosWindow = true;
         static bool showBenchmarkWindow = false;
         static bool showDebugCrossCheck = false;
+
+        // Vehicle Library & Presets UI State
+        static bool showVehicleGallery = true;
+        static bool showVehicleDetails = true;
+        static bool showVehiclePreview = false;
+        static bool showVehicleCustomization = false;
+
+        static ui::VehicleGalleryPanel vehicleGalleryPanel;
+        static ui::VehicleDetailsPanel vehicleDetailsPanel;
+        static std::unique_ptr<ui::VehiclePreviewPanel> vehiclePreviewPanel;
+        static ui::VehicleCustomizationPanel vehicleCustomizationPanel;
+        if (!vehiclePreviewPanel) {
+            vehiclePreviewPanel = std::make_unique<ui::VehiclePreviewPanel>();
+        }
 
         // CG Algos: Line Rasterization
         static int lineX0 = -15, lineY0 = -10, lineX1 = 20, lineY1 = 15;
@@ -901,6 +928,13 @@ int Application::Run() {
                 ImGui::Checkbox("Show CG Algorithms Demonstrator", &showCgAlgosWindow);
                 ImGui::Checkbox("Show Benchmark Experiments Runner", &showBenchmarkWindow);
                 ImGui::Checkbox("Show Debug Mode Cross-Check", &showDebugCrossCheck);
+
+                ImGui::Separator();
+                ImGui::TextColored(ImVec4(0.3f, 0.75f, 1.0f, 1.0f), "Vehicle Library & Supercars:");
+                ImGui::Checkbox("Show Vehicle Gallery & Catalog", &showVehicleGallery);
+                ImGui::Checkbox("Show Vehicle Details", &showVehicleDetails);
+                ImGui::Checkbox("Show Vehicle 3D Preview", &showVehiclePreview);
+                ImGui::Checkbox("Show Vehicle Customization", &showVehicleCustomization);
             }
 
             ImGui::End();
@@ -1256,6 +1290,20 @@ int Application::Run() {
                 ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.3f, 1.0f), "PASS: 100%% data consistency verified with real simulation state.");
             }
             ImGui::End();
+        }
+
+        // ================= VEHICLE LIBRARY & PRESETS PANELS =================
+        if (showVehicleGallery) {
+            vehicleGalleryPanel.Render(&showVehicleGallery);
+        }
+        if (showVehicleDetails) {
+            vehicleDetailsPanel.Render(&showVehicleDetails);
+        }
+        if (showVehiclePreview && vehiclePreviewPanel) {
+            vehiclePreviewPanel->Render(vehicleManager.get(), sceneShaderHandle.get(), emissiveShader.get(), &showVehiclePreview);
+        }
+        if (showVehicleCustomization) {
+            vehicleCustomizationPanel.Render(&showVehicleCustomization);
         }
 
         gpuProfiler->BeginSection("UI Pass");

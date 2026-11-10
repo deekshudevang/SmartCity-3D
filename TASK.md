@@ -307,5 +307,46 @@ Total Test time (real) = 29.22 sec
 | :--- | :--- | :--- | :--- |
 | `test_headless_sim` | auto (CTest) | NOT_IMPLEMENTED | Pending Phase 8 |
 
-### Known Issues / Deviations / Next-phase prerequisites
-- Prerequisite: Phase 7.
+---
+
+## Phase 9: Vehicle JSON Library Integration | Status: VERIFIED | Date: 2026-11-10
+
+### Requirement Table
+| ID | Requirement | Status | Evidence (file/command) |
+| :--- | :--- | :--- | :--- |
+| REQ-09-01 | Recursive JSON scanner and parser for Cherax Entity vehicle configurations in `assets/vehicle_presets/source_json/` | VERIFIED | `src/vehicles/VehiclePresetImporter.h/.cpp`, `test_vehicle_importer` |
+| REQ-09-02 | Ingest and normalize 66 GTA vehicle configurations with 50 unique unsigned 32-bit model hashes | VERIFIED | `assets/vehicle_presets/normalized/` (66 JSON files), `test_vehicle_json` |
+| REQ-09-03 | Extract all 50 modification slots (mod0..mod49 index & variation), extras (extra0..extra15), wheels (type, color, smoke, drift, bulletproof) | VERIFIED | `src/vehicles/VehiclePreset.h/.cpp`, `test_vehicle_json` |
+| REQ-09-04 | 160-entry GTA V color palette RGB lookup table and custom primary/secondary RGB override support | VERIFIED | `src/vehicles/VehiclePreset.cpp`, `test_vehicle_customization` |
+| REQ-09-05 | 3D Asset Manifest Registry (`assets/vehicle_presets/vehicle_assets.json`) with real filesystem verification (`AVAILABLE` vs `MISSING_MODEL`) | VERIFIED | `src/vehicles/VehicleAssetRegistry.h/.cpp`, `test_vehicle_assets` |
+| REQ-09-06 | Normalized vehicle database with FNV-1a content hash deduplication and queryable search/filters | VERIFIED | `src/vehicles/VehiclePresetRegistry.h/.cpp`, `test_vehicle_registry` |
+| REQ-09-07 | Automated report generation exporting detailed summary to `assets/vehicle_presets/import_report.json` | VERIFIED | `assets/vehicle_presets/import_report.json` (66 discovered, 62 valid, 4 warnings, 0 malformed) |
+| REQ-09-08 | OpenGL 3.3 Core Customization Renderer with proportional CAD chassis, cylinder wheels, additive neon quad underglow, brake lights, and headlights | VERIFIED | `src/vehicles/VehicleCustomization.h/.cpp`, `test_vehicle_customization` |
+| REQ-09-09 | Dear ImGui Vehicle Gallery Panel with full-text search, category filter, asset status filter, validation filter, and selection | VERIFIED | `src/ui/VehicleGalleryPanel.h/.cpp`, `src/core/Application.cpp` |
+| REQ-09-10 | Dear ImGui Vehicle Details Panel with tabbed inspector for identity, paint swatches, wheels/neon, mods table, extras, sim profile, and raw JSON | VERIFIED | `src/ui/VehicleDetailsPanel.h/.cpp` |
+| REQ-09-11 | Interactive 3D Turntable Preview Panel with offscreen 512x384 FBO, auto-orbit, steer/wheel spin sliders, and simulation spawner | VERIFIED | `src/ui/VehiclePreviewPanel.h/.cpp` |
+| REQ-09-12 | Live Vehicle Customization Panel with interactive color picker, GTA color palette selector, neon underglow toggles, and plate text editor | VERIFIED | `src/ui/VehicleCustomizationPanel.h/.cpp` |
+| REQ-09-13 | Seamless simulation integration: spawn customized presets into RoadNetwork with custom paint and physical IDM dynamics | VERIFIED | `src/vehicles/VehicleLibrary.h/.cpp`, `src/sim/Vehicle.h` (`SetColor`) |
+| REQ-09-14 | Zero-leak lifecycle verification in headless and windowed modes | VERIFIED | `.\build\SmartCity3D.exe --headless` (0 leaks reported on shutdown) |
+
+### Test Table
+| Test | Type (auto/manual) | Result | Evidence |
+| :--- | :--- | :--- | :--- |
+| `test_vehicle_json` | auto (CTest) | PASS | `ctest -R test_vehicle_json` (5/5 tests passed in 0.85s, exit code 0) |
+| `test_vehicle_importer` | auto (CTest) | PASS | `ctest -R test_vehicle_importer` (5/5 tests passed in 0.53s, exit code 0) |
+| `test_vehicle_registry` | auto (CTest) | PASS | `ctest -R test_vehicle_registry` (5/5 tests passed in 0.43s, exit code 0) |
+| `test_vehicle_assets` | auto (CTest) | PASS | `ctest -R test_vehicle_assets` (4/4 tests passed in 0.86s, exit code 0) |
+| `test_vehicle_customization` | auto (CTest) | PASS | `ctest -R test_vehicle_customization` (5/5 tests passed in 0.42s, exit code 0) |
+| Full Suite Regression (25/25) | auto (CTest) | PASS | `ctest --test-dir build` (100% passed 25/25 in 57.82s, exit code 0) |
+| Headless Lifecycle Run | auto | PASS | `.\build\SmartCity3D.exe --headless` (60 frames rendered, 0 leaks, exit code 0) |
+
+### Import Statistics (`assets/vehicle_presets/import_report.json`)
+- **Total Candidate Files Discovered**: 66
+- **Successfully Normalized & Serialized**: 66
+- **Valid Configurations**: 62
+- **Warning Configurations (Preserved Unknown Extensions)**: 4 (`_creatorSignature`, `attachments`)
+- **Malformed / Corrupt Files**: 0
+- **Duplicate Configurations (Identical Content Hash)**: 1 (`10F widebody.json` & `widebody 10f.json`)
+- **Asset Status**: 66 `MISSING_MODEL` (no external 3D vertex meshes in source GTA JSONs; accurately rendered using CAD chassis placeholder)
+- **Palette Mapping**: 160 standard GTA colors verified
+

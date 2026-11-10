@@ -18,5 +18,5 @@ external/glfw/build/
 external/assimp/
 vcpkg_installed/
 imgui.ini
-Vehicles/
+/Vehicles/
 logs/
