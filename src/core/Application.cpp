@@ -13,6 +13,7 @@
 #include "gfx/ShadowMap.h"
 
 #include "city/CityEnvironment.h"
+#include "sim/TrafficManager.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -33,7 +34,7 @@ int Application::Run() {
     Logger::Init("logs/smartcity.log");
     Logger::Info("==================================================================");
     Logger::Info(" SmartCity 3D — Intelligent Traffic Intersection Simulation");
-    Logger::Info(" Phase 3: Urban Environment, Multi-Lane Markings & Infrastructure");
+    Logger::Info(" Phase 4: Vehicle Simulation, IDM Dynamics & Lane Navigation");
     Logger::Info("==================================================================");
 
     SimulationSettings simSettings;
@@ -89,6 +90,9 @@ int Application::Run() {
     // City Environment (Intersection geometry, lane markings, buildings, poles)
     auto city = std::make_unique<city::CityEnvironment>(interSettings);
 
+    // Traffic Simulation Manager (Lane graph, multi-class vehicles, IDM dynamics, conflicts)
+    auto traffic = std::make_unique<sim::TrafficManager>(simSettings, interSettings);
+
     Time timer(simSettings.fixedTimestep);
 
     int frameLimit = m_args.headless ? 60 : -1;
@@ -111,6 +115,17 @@ int Application::Run() {
 
         float dt = static_cast<float>(timer.GetFrameDeltaTime());
 
+        // Update window title with FPS and frame ms
+        static float titleUpdateTimer = 0.0f;
+        titleUpdateTimer += dt;
+        if (titleUpdateTimer >= 0.25f) {
+            titleUpdateTimer = 0.0f;
+            char titleBuf[128];
+            std::snprintf(titleBuf, sizeof(titleBuf), "SmartCity 3D — %.1f FPS (%.2f ms) | Vehicles: %zu",
+                          timer.GetFPS(), timer.GetFrameDeltaTime() * 1000.0, traffic->GetActiveVehicleCount());
+            window.SetTitle(titleBuf);
+        }
+
         if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
             camera.Update(dt);
         }
@@ -121,7 +136,9 @@ int Application::Run() {
 
         // Fixed-timestep simulation updates
         while (timer.ShouldSimulateStep()) {
-            dayNight->Update(static_cast<float>(timer.GetFixedDeltaTime()));
+            float fixedDt = static_cast<float>(timer.GetFixedDeltaTime());
+            dayNight->Update(fixedDt);
+            traffic->Update(fixedDt, nsSignal, ewSignal, nsLeft, ewLeft);
             timer.ConsumeSimulateStep();
         }
 
@@ -135,6 +152,7 @@ int Application::Run() {
         shadowShader->Bind();
         shadowShader->SetMat4("u_LightSpaceMatrix", lightSpaceMatrix);
         city->RenderShadowDepth(shadowShader.get());
+        traffic->RenderShadowDepth(shadowShader.get());
         shadowMap->Unbind(window.GetWidth(), window.GetHeight());
 
         // ---------------- PASS 2: MAIN SCENE RENDER PASS ----------------
@@ -171,6 +189,8 @@ int Application::Run() {
 
         // Render City Environment
         city->Render(sceneShader.get(), emissiveShader.get(), nsSignal, ewSignal, nsLeft, ewLeft, nsPedWalk, ewPedWalk);
+        // Render 3D Vehicles & Lights
+        traffic->Render(sceneShader.get(), emissiveShader.get());
 
         // ---------------- PASS 3: IMGUI UI OVERLAY ----------------
         ImGui_ImplOpenGL3_NewFrame();
@@ -215,6 +235,35 @@ int Application::Run() {
             ImGui::Text("Streetlights: %s", streetlightsActive ? "ACTIVE (ON)" : "INACTIVE (OFF)");
 
             ImGui::Separator();
+            ImGui::Text("Traffic Simulation & IDM Dynamics:");
+            ImGui::Text("Active Vehicles: %zu | Spawned: %d | Exited: %d",
+                        traffic->GetActiveVehicleCount(), traffic->GetTotalSpawned(), traffic->GetTotalCompleted());
+            ImGui::Text("Average Velocity: %.2f m/s (%.1f km/h)",
+                        traffic->GetAverageSpeed(), traffic->GetAverageSpeed() * 3.6f);
+
+            if (traffic->IsEmergencyActive()) {
+                ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "EMERGENCY PREEMPTION: ACTIVE");
+            } else {
+                ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Emergency Preemption: Standby");
+            }
+
+            if (ImGui::Button("Spawn Sedan")) {
+                traffic->SpawnVehicle(sim::VehicleType::Sedan, sim::ApproachDirection::North, sim::TurnManeuver::Straight);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Spawn SUV")) {
+                traffic->SpawnVehicle(sim::VehicleType::SUV, sim::ApproachDirection::East, sim::TurnManeuver::Straight);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Spawn Bus")) {
+                traffic->SpawnVehicle(sim::VehicleType::Bus, sim::ApproachDirection::South, sim::TurnManeuver::Straight);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Spawn Emergency")) {
+                traffic->SpawnVehicle(sim::VehicleType::Emergency, sim::ApproachDirection::West, sim::TurnManeuver::Straight);
+            }
+
+            ImGui::Separator();
             ImGui::Text("Signal Head Test Overrides:");
             const char* signalNames[] = { "RED", "YELLOW", "GREEN" };
             ImGui::Combo("N-S Signal", &nsSignal, signalNames, 3);
@@ -243,7 +292,7 @@ int Application::Run() {
     ImGui::DestroyContext();
 
     window.Shutdown();
-    Logger::Info("SmartCity 3D Phase 3 terminated successfully.");
+    Logger::Info("SmartCity 3D Phase 4 terminated successfully.");
     Logger::Shutdown();
     return 0;
 }

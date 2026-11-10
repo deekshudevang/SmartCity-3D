@@ -36,6 +36,8 @@ public:
     void SetVSync(bool enabled);
     bool IsVSync() const { return m_props.vsync; }
 
+    void SetTitle(const std::string& title);
+
     using ResizeCallback = std::function<void(int width, int height)>;
     void SetResizeCallback(ResizeCallback callback) { m_resizeCallback = callback; }
 

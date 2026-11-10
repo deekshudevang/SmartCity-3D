@@ -23,6 +23,7 @@ Camera::Camera(float fovRad, float aspectRatio, float nearClip, float farClip)
     , m_moveSpeed(25.0f)
     , m_mouseSensitivity(0.003f) // in radians per pixel
 {
+    RecalculateProjectionMatrix();
     ApplyPreset(CameraPreset::Overview);
 }
 

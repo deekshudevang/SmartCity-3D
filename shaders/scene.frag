@@ -34,6 +34,8 @@ uniform int u_HasTexture;
 uniform sampler2D u_Texture;
 uniform float u_SpecularStrength;
 uniform float u_Shininess;
+uniform vec4 u_ColorOverride;
+uniform int u_UseColorOverride;
 
 float CalculateShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     // Perform perspective divide
@@ -64,7 +66,7 @@ float CalculateShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
 }
 
 void main() {
-    vec4 baseColor = v_Color;
+    vec4 baseColor = (u_UseColorOverride == 1) ? u_ColorOverride : v_Color;
     if (u_HasTexture == 1) {
         baseColor *= texture(u_Texture, v_TexCoord);
     }

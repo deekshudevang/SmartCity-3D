@@ -77,11 +77,16 @@ set(SMARTCITY_CORE_SOURCES
     src/gfx/Camera.cpp
     src/gfx/Light.cpp
     src/gfx/ShadowMap.cpp
+    src/gfx/Texture2D.cpp
     src/city/IntersectionGeometry.cpp
     src/city/RoadMarkings.cpp
     src/city/BuildingGenerator.cpp
     src/city/StreetFurniture.cpp
     src/city/CityEnvironment.cpp
+    src/sim/LaneGraph.cpp
+    src/sim/Vehicle.cpp
+    src/sim/IDMController.cpp
+    src/sim/TrafficManager.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS
@@ -97,11 +102,16 @@ set(SMARTCITY_CORE_HEADERS
     src/gfx/Camera.h
     src/gfx/Light.h
     src/gfx/ShadowMap.h
+    src/gfx/Texture2D.h
     src/city/IntersectionGeometry.h
     src/city/RoadMarkings.h
     src/city/BuildingGenerator.h
     src/city/StreetFurniture.h
     src/city/CityEnvironment.h
+    src/sim/LaneGraph.h
+    src/sim/Vehicle.h
+    src/sim/IDMController.h
+    src/sim/TrafficManager.h
 )
 
 add_library(SmartCityCore STATIC

@@ -112,6 +112,13 @@ void Window::SetVSync(bool enabled) {
     glfwSwapInterval(enabled ? 1 : 0);
 }
 
+void Window::SetTitle(const std::string& title) {
+    m_props.title = title;
+    if (m_window) {
+        glfwSetWindowTitle(m_window, title.c_str());
+    }
+}
+
 void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
     auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {

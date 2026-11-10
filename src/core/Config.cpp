@@ -49,6 +49,9 @@ static bool ExtractInt(const std::string& content, const std::string& key, int& 
 bool ConfigManager::LoadSimulationConfig(const std::string& path, SimulationSettings& outSettings) {
     std::ifstream file(path);
     if (!file.is_open()) {
+        file.open("../" + path);
+    }
+    if (!file.is_open()) {
         Logger::Warn("Could not open simulation config at ", path, ". Using default configuration.");
         return false;
     }
@@ -89,6 +92,9 @@ bool ConfigManager::LoadSimulationConfig(const std::string& path, SimulationSett
 
 bool ConfigManager::LoadIntersectionConfig(const std::string& path, IntersectionSettings& outSettings) {
     std::ifstream file(path);
+    if (!file.is_open()) {
+        file.open("../" + path);
+    }
     if (!file.is_open()) {
         Logger::Warn("Could not open intersection config at ", path, ". Using default configuration.");
         return false;
