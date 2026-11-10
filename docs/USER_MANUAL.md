@@ -140,3 +140,4 @@ SmartCity 3D includes a comprehensive vehicle customization system supporting GT
 
 ### Q: How do I hide the Dear ImGui interface for clean screenshots?
 **A**: Press `F11` or toggle the **Show UI** option in the View menu. Press `F12` or run `SmartCity3D.exe --release-screenshots` to automatically output high-resolution screenshots to the `screenshots/` directory.
+

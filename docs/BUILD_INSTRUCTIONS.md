@@ -98,3 +98,4 @@ Follow these steps to verify zero-dependency deployment in a fresh Windows Sandb
    - Open the extracted `SmartCity3D-1.0.0` folder.
    - Double-click `SmartCity3D.exe`.
    - **Expected Result**: The application initializes immediately at 1600x900 resolution without displaying any missing DLL errors (such as `VCRUNTIME140.dll` or `MSVCP140.dll`), as all runtime libraries are statically linked with the exception of standard Windows operating system binaries (`KERNEL32.dll`, `USER32.dll`, `GDI32.dll`, `msvcrt.dll`, `SHELL32.dll`).
+
