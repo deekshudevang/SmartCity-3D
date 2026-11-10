@@ -1,4 +1,4 @@
-﻿# SmartCity 3D — Build Script
+# SmartCity 3D — Build Script
 param(
     [ValidateSet("Debug", "Release")]
     [string]$Config = "Debug",
@@ -56,3 +56,4 @@ try {
 } finally {
     Pop-Location
 }
+

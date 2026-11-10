@@ -1,10 +1,76 @@
 #include "gfx/Light.h"
 #include <cmath>
 #include <algorithm>
+#include <string>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace SmartCity::gfx {
 
+LightingEnvironment::LightingEnvironment()
+    : m_useBlinnPhong(true)
+{
+}
+
+void LightingEnvironment::AddPointLight(const PointLight& light) {
+    if (m_pointLights.size() < 16) {
+        m_pointLights.push_back(light);
+    }
+}
+
+void LightingEnvironment::AddSpotLight(const SpotLight& light) {
+    if (m_spotLights.size() < 8) {
+        m_spotLights.push_back(light);
+    }
+}
+
+void LightingEnvironment::ApplyToShader(Shader* shader, const glm::vec3& cameraPos) const {
+    if (!shader) return;
+
+    shader->SetVec3("u_CameraPos", cameraPos);
+    shader->SetInt("u_UseBlinnPhong", m_useBlinnPhong ? 1 : 0);
+
+    // 1. Directional Light
+    shader->SetVec3("u_DirLight.direction", m_dirLight.direction);
+    shader->SetVec3("u_DirLight.color", m_dirLight.color);
+    shader->SetFloat("u_DirLight.intensity", m_dirLight.intensity);
+    shader->SetVec3("u_DirLight.ambient", m_dirLight.ambient);
+
+    // 2. Point Lights (up to 16)
+    int activePointCount = 0;
+    for (size_t i = 0; i < m_pointLights.size() && i < 16; ++i) {
+        if (!m_pointLights[i].active) continue;
+        std::string prefix = "u_PointLights[" + std::to_string(activePointCount) + "].";
+        shader->SetVec3(prefix + "position", m_pointLights[i].position);
+        shader->SetVec3(prefix + "color", m_pointLights[i].color);
+        shader->SetFloat(prefix + "intensity", m_pointLights[i].intensity);
+        shader->SetFloat(prefix + "radius", m_pointLights[i].radius);
+        shader->SetFloat(prefix + "constant", m_pointLights[i].constant);
+        shader->SetFloat(prefix + "linear", m_pointLights[i].linear);
+        shader->SetFloat(prefix + "quadratic", m_pointLights[i].quadratic);
+        activePointCount++;
+    }
+    shader->SetInt("u_NumPointLights", activePointCount);
+
+    // 3. Spot Lights (up to 8)
+    int activeSpotCount = 0;
+    for (size_t i = 0; i < m_spotLights.size() && i < 8; ++i) {
+        if (!m_spotLights[i].active) continue;
+        std::string prefix = "u_SpotLights[" + std::to_string(activeSpotCount) + "].";
+        shader->SetVec3(prefix + "position", m_spotLights[i].position);
+        shader->SetVec3(prefix + "direction", glm::normalize(m_spotLights[i].direction));
+        shader->SetVec3(prefix + "color", m_spotLights[i].color);
+        shader->SetFloat(prefix + "intensity", m_spotLights[i].intensity);
+        shader->SetFloat(prefix + "innerCutoff", m_spotLights[i].innerCutoff);
+        shader->SetFloat(prefix + "outerCutoff", m_spotLights[i].outerCutoff);
+        shader->SetFloat(prefix + "constant", m_spotLights[i].constant);
+        shader->SetFloat(prefix + "linear", m_spotLights[i].linear);
+        shader->SetFloat(prefix + "quadratic", m_spotLights[i].quadratic);
+        activeSpotCount++;
+    }
+    shader->SetInt("u_NumSpotLights", activeSpotCount);
+}
+
+// ----------------- DayNightCycle -----------------
 DayNightCycle::DayNightCycle(float initialTimeHours)
     : m_timeOfDay(initialTimeHours)
     , m_cycleSpeed(0.05f)
@@ -49,14 +115,16 @@ void DayNightCycle::CalculateLighting() {
         float t = (sunHeight + 0.1f) / 0.25f;
         m_sunLight.color = glm::mix(glm::vec3(0.7f, 0.35f, 0.2f), glm::vec3(1.0f, 0.7f, 0.4f), t);
         m_sunLight.intensity = glm::mix(0.2f, 0.85f, t);
-        m_sunLight.ambient = glm::mix(glm::vec3(0.1f, 0.1f, 0.16f), glm::vec3(0.25f, 0.22f, 0.28f), t);
-        m_skyColor = glm::mix(glm::vec3(0.12f, 0.12f, 0.22f), glm::vec3(0.78f, 0.42f, 0.3f), t);
-        m_streetlightsOn = true;
+        m_sunLight.ambient = glm::mix(glm::vec3(0.12f, 0.12f, 0.18f), glm::vec3(0.25f, 0.28f, 0.32f), t);
+        m_skyColor = glm::mix(glm::vec3(0.18f, 0.15f, 0.28f), glm::vec3(0.5f, 0.45f, 0.65f), t);
+        m_streetlightsOn = (sunHeight < 0.05f);
     } else {
-        m_sunLight.color = glm::vec3(0.25f, 0.32f, 0.5f);
-        m_sunLight.intensity = 0.25f;
-        m_sunLight.ambient = glm::vec3(0.06f, 0.08f, 0.12f);
-        m_skyColor = glm::vec3(0.05f, 0.06f, 0.10f);
+        // Night (Moon illumination)
+        m_sunLight.direction = glm::normalize(glm::vec3(0.2f, -1.0f, 0.4f));
+        m_sunLight.color = glm::vec3(0.35f, 0.45f, 0.65f);
+        m_sunLight.intensity = 0.18f;
+        m_sunLight.ambient = glm::vec3(0.06f, 0.07f, 0.10f);
+        m_skyColor = glm::vec3(0.03f, 0.04f, 0.07f);
         m_streetlightsOn = true;
     }
 }

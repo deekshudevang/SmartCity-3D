@@ -1,6 +1,5 @@
 #include "gfx/Texture2D.h"
 #include "core/Logger.h"
-#define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -139,3 +138,4 @@ void Texture2D::Unbind() const {
 }
 
 } // namespace SmartCity::gfx
+

@@ -55,3 +55,4 @@ bool IDMController::IsInDilemmaZone(const VehiclePhysics& physics, float current
 }
 
 } // namespace SmartCity::sim
+

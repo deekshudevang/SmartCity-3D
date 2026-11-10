@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "gfx/Frustum.h"
 
 namespace SmartCity::gfx {
 
@@ -19,6 +20,11 @@ enum class CameraPreset {
     Custom
 };
 
+enum class ProjectionType {
+    Perspective,
+    Orthographic
+};
+
 class Camera {
 public:
     // Units: radians internally for FOV, yaw, pitch
@@ -31,6 +37,8 @@ public:
     const glm::mat4& GetProjectionMatrix() const { return m_projectionMatrix; }
     glm::mat4 GetViewProjectionMatrix() const { return m_projectionMatrix * m_viewMatrix; }
 
+    const Frustum& GetFrustum() const { return m_frustum; }
+
     const glm::vec3& GetPosition() const { return m_position; }
     const glm::vec3& GetForward() const { return m_forward; }
     const glm::vec3& GetTarget() const { return m_target; }
@@ -39,6 +47,13 @@ public:
     CameraMode GetMode() const { return m_mode; }
     void ApplyPreset(CameraPreset preset);
     CameraPreset GetCurrentPreset() const { return m_currentPreset; }
+
+    ProjectionType GetProjectionType() const { return m_projType; }
+    void SetProjectionType(ProjectionType type);
+    void ToggleProjectionType();
+
+    float GetOrthoSize() const { return m_orthoSize; }
+    void SetOrthoSize(float size);
 
     void SetOrbitTarget(const glm::vec3& target);
     void SetOrbitDistance(float distance);
@@ -51,13 +66,17 @@ public:
     float GetYawRad() const { return m_yawRad; }
     float GetPitchRad() const { return m_pitchRad; }
     float GetFOVRad() const { return m_fovRad; }
-    void SetFOVRad(float fovRad) { m_fovRad = fovRad; RecalculateProjectionMatrix(); }
+    void SetFOVRad(float fovRad);
 
     // UI helpers (degrees)
     float GetYawDegrees() const { return glm::degrees(m_yawRad); }
     float GetPitchDegrees() const { return glm::degrees(m_pitchRad); }
     float GetFOVDegrees() const { return glm::degrees(m_fovRad); }
     void SetFOVDegrees(float fovDeg) { SetFOVRad(glm::radians(fovDeg)); }
+
+    float GetNearClip() const { return m_nearClip; }
+    float GetFarClip() const { return m_farClip; }
+    float GetAspectRatio() const { return m_aspectRatio; }
 
 private:
     void RecalculateProjectionMatrix();
@@ -66,6 +85,7 @@ private:
 
     CameraMode m_mode;
     CameraPreset m_currentPreset;
+    ProjectionType m_projType;
 
     glm::vec3 m_position;
     glm::vec3 m_target;
@@ -78,6 +98,8 @@ private:
     float m_nearClip;
     float m_farClip;
 
+    float m_orthoSize;
+
     float m_orbitDistance;
     float m_yawRad;   // radians internally
     float m_pitchRad; // radians internally
@@ -87,6 +109,7 @@ private:
 
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;
+    Frustum m_frustum;
 };
 
 } // namespace SmartCity::gfx

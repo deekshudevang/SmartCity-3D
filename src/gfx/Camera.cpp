@@ -8,6 +8,7 @@ namespace SmartCity::gfx {
 Camera::Camera(float fovRad, float aspectRatio, float nearClip, float farClip)
     : m_mode(CameraMode::Orbit)
     , m_currentPreset(CameraPreset::Overview)
+    , m_projType(ProjectionType::Perspective)
     , m_position(0.0f, 45.0f, 55.0f)
     , m_target(0.0f, 0.0f, 0.0f)
     , m_forward(0.0f, -0.6f, -0.8f)
@@ -17,6 +18,7 @@ Camera::Camera(float fovRad, float aspectRatio, float nearClip, float farClip)
     , m_aspectRatio(aspectRatio)
     , m_nearClip(nearClip)
     , m_farClip(farClip)
+    , m_orthoSize(35.0f)
     , m_orbitDistance(70.0f)
     , m_yawRad(glm::radians(-45.0f))
     , m_pitchRad(glm::radians(-38.0f))
@@ -34,6 +36,25 @@ void Camera::SetViewportSize(int width, int height) {
     }
 }
 
+void Camera::SetProjectionType(ProjectionType type) {
+    m_projType = type;
+    RecalculateProjectionMatrix();
+}
+
+void Camera::ToggleProjectionType() {
+    SetProjectionType(m_projType == ProjectionType::Perspective ? ProjectionType::Orthographic : ProjectionType::Perspective);
+}
+
+void Camera::SetOrthoSize(float size) {
+    m_orthoSize = std::clamp(size, 5.0f, 250.0f);
+    RecalculateProjectionMatrix();
+}
+
+void Camera::SetFOVRad(float fovRad) {
+    m_fovRad = std::clamp(fovRad, glm::radians(15.0f), glm::radians(120.0f));
+    RecalculateProjectionMatrix();
+}
+
 void Camera::ApplyPreset(CameraPreset preset) {
     m_currentPreset = preset;
     switch (preset) {
@@ -49,21 +70,21 @@ void Camera::ApplyPreset(CameraPreset preset) {
             m_target = glm::vec3(0.0f, 0.0f, 0.0f);
             m_orbitDistance = 85.0f;
             m_yawRad = glm::radians(-90.0f);
-            m_pitchRad = glm::radians(-89.0f);
+            m_pitchRad = glm::radians(-89.0f); // clamped to avoid gimbal lock
             break;
         case CameraPreset::NorthTrafficCam:
             m_mode = CameraMode::Orbit;
-            m_target = glm::vec3(0.0f, 1.0f, 0.0f);
+            m_target = glm::vec3(0.0f, 1.5f, -25.0f);
             m_orbitDistance = 45.0f;
-            m_yawRad = glm::radians(-90.0f); // looking South towards +Z
-            m_pitchRad = glm::radians(-22.0f);
+            m_yawRad = glm::radians(180.0f);
+            m_pitchRad = glm::radians(-25.0f);
             break;
         case CameraPreset::EastTrafficCam:
             m_mode = CameraMode::Orbit;
-            m_target = glm::vec3(0.0f, 1.0f, 0.0f);
+            m_target = glm::vec3(25.0f, 1.5f, 0.0f);
             m_orbitDistance = 45.0f;
-            m_yawRad = glm::radians(180.0f); // looking West towards -X
-            m_pitchRad = glm::radians(-22.0f);
+            m_yawRad = glm::radians(90.0f);
+            m_pitchRad = glm::radians(-25.0f);
             break;
         case CameraPreset::PedestrianView:
             m_mode = CameraMode::Orbit;
@@ -93,11 +114,15 @@ void Camera::Update(float dt) {
     float scrollDelta = core::Input::GetMouseScrollDelta();
 
     if (scrollDelta != 0.0f) {
-        if (m_mode == CameraMode::Orbit) {
-            SetOrbitDistance(m_orbitDistance - scrollDelta * 3.5f);
-            m_currentPreset = CameraPreset::Custom;
+        if (m_projType == ProjectionType::Orthographic) {
+            SetOrthoSize(m_orthoSize - scrollDelta * 2.5f);
         } else {
-            m_moveSpeed = std::clamp(m_moveSpeed + scrollDelta * 5.0f, 5.0f, 100.0f);
+            if (m_mode == CameraMode::Orbit) {
+                SetOrbitDistance(m_orbitDistance - scrollDelta * 3.5f);
+                m_currentPreset = CameraPreset::Custom;
+            } else {
+                m_moveSpeed = std::clamp(m_moveSpeed + scrollDelta * 5.0f, 5.0f, 100.0f);
+            }
         }
     }
 
@@ -152,10 +177,18 @@ void Camera::RecalculateVectors() {
 
 void Camera::RecalculateViewMatrix() {
     m_viewMatrix = glm::lookAt(m_position, m_position + m_forward, m_up);
+    m_frustum.ExtractPlanes(GetViewProjectionMatrix());
 }
 
 void Camera::RecalculateProjectionMatrix() {
-    m_projectionMatrix = glm::perspective(m_fovRad, m_aspectRatio, m_nearClip, m_farClip);
+    if (m_projType == ProjectionType::Perspective) {
+        m_projectionMatrix = glm::perspective(m_fovRad, m_aspectRatio, m_nearClip, m_farClip);
+    } else {
+        float hw = m_orthoSize * m_aspectRatio;
+        float hh = m_orthoSize;
+        m_projectionMatrix = glm::ortho(-hw, hw, -hh, hh, m_nearClip, m_farClip);
+    }
+    m_frustum.ExtractPlanes(GetViewProjectionMatrix());
 }
 
 } // namespace SmartCity::gfx

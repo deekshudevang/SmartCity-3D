@@ -15,5 +15,6 @@ CMakeSettings.json
 
 # Dependencies artifacts
 external/glfw/build/
+external/assimp/
 vcpkg_installed/
 imgui.ini

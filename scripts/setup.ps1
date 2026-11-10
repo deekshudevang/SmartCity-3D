@@ -1,4 +1,4 @@
-﻿# SmartCity 3D — Environment Setup Script
+# SmartCity 3D — Environment Setup Script
 $ErrorActionPreference = 'Stop'
 
 Write-Host "=====================================================" -ForegroundColor Cyan
@@ -58,3 +58,4 @@ if (-not $env:VCPKG_ROOT) {
 }
 
 Write-Host "Setup verification complete. Development environment is ready!" -ForegroundColor Green
+

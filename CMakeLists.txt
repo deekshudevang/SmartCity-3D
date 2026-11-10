@@ -14,6 +14,8 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 # 1. GLAD (OpenGL 3.3 Core Profile)
 set(GLAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/glad")
 add_library(glad STATIC "${GLAD_DIR}/src/glad.c")
@@ -78,6 +80,15 @@ set(SMARTCITY_CORE_SOURCES
     src/gfx/Light.cpp
     src/gfx/ShadowMap.cpp
     src/gfx/Texture2D.cpp
+    src/gfx/Frustum.cpp
+    src/gfx/Material.cpp
+    src/gfx/Renderer.cpp
+    src/gfx/Skybox.cpp
+    src/scene/Transform.cpp
+    src/scene/SceneObject.cpp
+    src/scene/Scene.cpp
+    src/scene/Model.cpp
+    src/scene/ResourceManager.cpp
     src/city/IntersectionGeometry.cpp
     src/city/RoadMarkings.cpp
     src/city/BuildingGenerator.cpp
@@ -103,6 +114,15 @@ set(SMARTCITY_CORE_HEADERS
     src/gfx/Light.h
     src/gfx/ShadowMap.h
     src/gfx/Texture2D.h
+    src/gfx/Frustum.h
+    src/gfx/Material.h
+    src/gfx/Renderer.h
+    src/gfx/Skybox.h
+    src/scene/Transform.h
+    src/scene/SceneObject.h
+    src/scene/Scene.h
+    src/scene/Model.h
+    src/scene/ResourceManager.h
     src/city/IntersectionGeometry.h
     src/city/RoadMarkings.h
     src/city/BuildingGenerator.h

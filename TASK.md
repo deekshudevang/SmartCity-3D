@@ -36,21 +36,32 @@
 ### Requirement Table
 | ID | Requirement | Status | Evidence (file/command) |
 | :--- | :--- | :--- | :--- |
-| REQ-02-01 | Shader subsystem with compilation/link diagnostics & fallbacks | VERIFIED | `src/gfx/Shader.h/.cpp`, `shaders/scene.vert/.frag` |
-| REQ-02-02 | RAII OpenGL Buffer wrappers (VAO, VBO, EBO) and Mesh classes | VERIFIED | `src/gfx/Buffer.h/.cpp`, `src/gfx/Mesh.h/.cpp` |
-| REQ-02-03 | 3D Camera system with View-Projection, Orbit/Fly, and Presets | VERIFIED | `src/gfx/Camera.h/.cpp`, radians internally, `tests/unit/test_camera.cpp` |
-| REQ-02-04 | Shadow mapping with 2048x2048 Depth FBO and 3x3 PCF filter | VERIFIED | `src/gfx/ShadowMap.h/.cpp`, `shaders/shadow_depth.vert/.frag` |
-| REQ-02-05 | Day/Night cycle with sun/moon vector and ambient shifts | VERIFIED | `src/gfx/Light.h/.cpp`, dynamic directional lighting |
-| REQ-02-06 | Multi-pass rendering pipeline (Shadow pass, scene pass, UI overlay) | VERIFIED | `src/core/Application.cpp` |
+| REQ-02-01 | Reusable Renderer with pass management, state sorting, CCW culling & RenderStats | VERIFIED | `src/gfx/Renderer.h/.cpp`, sorted by `(ShaderID << 32) \| MaterialID` |
+| REQ-02-02 | Scene and SceneObject graph with AABB, visibility flags, and clean RAII lifecycle | VERIFIED | `src/scene/Scene.h/.cpp`, `src/scene/SceneObject.h/.cpp` |
+| REQ-02-03 | Transform with T*R*S composition, quaternions, Euler helpers, dirty flag, CPU normal matrix | VERIFIED | `src/scene/Transform.h/.cpp`, `tests/unit/test_transform.cpp` |
+| REQ-02-04 | Camera supporting runtime toggle between Perspective & Zoomable Orthographic | VERIFIED | `src/gfx/Camera.h/.cpp`, `tests/unit/test_camera_matrices.cpp` |
+| REQ-02-05 | Gribb-Hartmann 6-plane view-frustum culling with AABB / sphere intersection testing | VERIFIED | `src/gfx/Frustum.h/.cpp`, `tests/unit/test_frustum.cpp` |
+| REQ-02-06 | ResourceManager with canonical path caching, shared handles, duplicate load prevention & 0 leaks | VERIFIED | `src/scene/ResourceManager.h/.cpp`, `tests/unit/test_resource_manager.cpp` |
+| REQ-02-07 | Assimp Model loading with tangent/normal generation, UV flipping, and visible magenta fallback | VERIFIED | `src/scene/Model.h/.cpp`, fallback verified on missing file |
+| REQ-02-08 | Material with ambient/diffuse/specular, shininess, maps, and state-change minimizing sort key | VERIFIED | `src/gfx/Material.h/.cpp`, 64-bit sort key |
+| REQ-02-09 | Directional, Point (attenuation), and SpotLight (inner/outer cutoff) with Blinn-Phong toggle | VERIFIED | `src/gfx/Light.h/.cpp`, `shaders/scene.frag` |
+| REQ-02-10 | Skybox with cubemap loader, GL_LEQUAL depth trick, view translation stripping, and procedural fallback | VERIFIED | `src/gfx/Skybox.h/.cpp`, `shaders/skybox.vert/.frag` |
+| REQ-02-11 | Diagnostics overlay: rolling 60-frame avg/min/max FPS & ms, draw calls, triangles, culled count, controls | VERIFIED | `src/core/Application.cpp` |
+| REQ-02-12 | Comprehensive Architecture & Algorithm documentation | VERIFIED | `docs/ARCHITECTURE.md`, `docs/ALGORITHMS.md` |
 
 ### Test Table
 | Test | Type (auto/manual) | Result | Evidence |
 | :--- | :--- | :--- | :--- |
-| `test_camera` | auto (CTest) | PASS | `ctest -R test_camera` (Passed 0.20s, exit code 0) |
-| Graphics Pipeline Run | auto | PASS | `.\build\SmartCity3D.exe --headless` (FBO created, 60 frames rendered) |
+| `test_frustum` | auto (CTest) | PASS | `ctest -R test_frustum` (Gribb-Hartmann 6 planes vs AABB / sphere) |
+| `test_transform` | auto (CTest) | PASS | `ctest -R test_transform` (TRS order, hierarchy, normal matrix) |
+| `test_camera_matrices` | auto (CTest) | PASS | `ctest -R test_camera_matrices` (Analytical ortho/persp checks) |
+| `test_resource_manager` | auto (CTest) | PASS | `ctest -R test_resource_manager` (Cache hits, fallback model, 0 leaks) |
+| Full Suite Regression (11/11) | auto (CTest) | PASS | `ctest --test-dir build` (100% tests passed, 2.95s total) |
+| Headless Graphics Run | auto | PASS | `.\build\SmartCity3D.exe --headless` (60 frames rendered, 0 leaks reported) |
 
 ### Known Issues / Deviations / Next-phase prerequisites
-- None.
+- None. Phase 2 is fully implemented and VERIFIED.
+- Next Phase Prerequisite: Phase 2 is approved. Ready to proceed to Phase 3/5.
 
 ---
 

@@ -28,3 +28,4 @@ PointerAlignment: Left
 ReferenceAlignment: Left
 SortIncludes: CaseSensitive
 Standard: c++17
+

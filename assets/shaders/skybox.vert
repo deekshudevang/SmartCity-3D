@@ -1,0 +1,15 @@
+#version 330 core
+
+layout(location = 0) in vec3 a_Position;
+
+uniform mat4 u_ViewProjection;
+
+out vec3 v_TexCoords;
+
+void main() {
+    v_TexCoords = a_Position;
+    vec4 pos = u_ViewProjection * vec4(a_Position, 1.0);
+    // Setting z = w ensures depth buffer value will be 1.0 (far plane)
+    gl_Position = pos.xyww;
+}
+

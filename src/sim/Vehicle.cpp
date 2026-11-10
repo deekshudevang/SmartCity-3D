@@ -114,3 +114,4 @@ void Vehicle::Update(float dt, const LaneTrajectory* trajectory) {
 }
 
 } // namespace SmartCity::sim
+
