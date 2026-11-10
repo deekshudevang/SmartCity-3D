@@ -143,6 +143,16 @@ void Vehicle::SetRoute(const VehicleRoute& route) {
     m_previousState = m_currentState;
 }
 
+void Vehicle::SetDistanceAlongRoute(float s) {
+    m_distanceAlongRoute = s;
+    if (m_route.inboundLane) {
+        m_route.SampleAtDistance(m_distanceAlongRoute, m_position, m_tangent, m_headingRad, m_curvature);
+        m_position.y = m_dimensions.height * 0.5f;
+        m_currentState = { m_position, m_headingRad, m_speed };
+        m_previousState = m_currentState;
+    }
+}
+
 void Vehicle::SaveStateSnapshot() {
     m_previousState = m_currentState;
     m_currentState = { m_position, m_headingRad, m_speed };
@@ -162,6 +172,10 @@ void Vehicle::Update(float dt, const LaneTrajectory* legacyTrajectory) {
     // Integrate acceleration and speed
     m_speed = std::clamp(m_speed + m_acceleration * dt, 0.0f, m_physics.desiredSpeed);
     m_distanceAlongRoute += m_speed * dt;
+
+    if (m_speed < 0.10f && m_distanceAlongRoute <= m_route.GetStopLineDistance() + 2.0f) {
+        m_waitingTime += dt;
+    }
 
     if (legacyTrajectory) {
         float totalLen = legacyTrajectory->GetTotalLength();

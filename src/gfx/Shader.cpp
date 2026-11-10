@@ -55,20 +55,10 @@ Shader::~Shader() {
 std::string Shader::ReadFile(const std::string& filepath) {
     std::ifstream in(filepath, std::ios::in | std::ios::binary);
     if (!in) {
-        // Try looking one level up (if running from build/ directory)
-        std::ifstream inUp("../" + filepath, std::ios::in | std::ios::binary);
-        if (inUp) {
-            std::ostringstream ss;
-            ss << inUp.rdbuf();
-            return ss.str();
-        }
-        // Try looking two levels up (if running from build/tests/ directory)
-        std::ifstream inUp2("../../" + filepath, std::ios::in | std::ios::binary);
-        if (inUp2) {
-            std::ostringstream ss;
-            ss << inUp2.rdbuf();
-            return ss.str();
-        }
+        in.clear();
+        in.open("../" + filepath, std::ios::in | std::ios::binary);
+    }
+    if (!in) {
         core::Logger::Error("Could not open shader file: ", filepath);
         return "";
     }

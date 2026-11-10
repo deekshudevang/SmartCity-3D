@@ -86,3 +86,4 @@ float GpuProfiler::GetSectionTimeMs(const std::string& name) const {
 }
 
 } // namespace SmartCity::gfx
+

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <random>
 #include <string>
+#include <functional>
 #include "city/RoadNetwork.h"
 #include "sim/Vehicle.h"
 #include "sim/ArcLengthLUT.h"
@@ -14,6 +15,11 @@
 
 namespace SmartCity::ped {
 class PedestrianManager;
+}
+
+namespace SmartCity::gfx {
+class Shader;
+class Mesh;
 }
 
 namespace SmartCity::sim {
@@ -52,6 +58,7 @@ class VehicleManager {
 public:
     explicit VehicleManager(const city::RoadNetwork& roadNetwork,
                             std::shared_ptr<ISignalProvider> signalProvider = nullptr);
+    ~VehicleManager();
 
     bool LoadConfig(const std::string& simConfigPath, const std::string& vehConfigPath);
 
@@ -65,6 +72,10 @@ public:
 
     // Manual spawner for tests & UI
     Vehicle* SpawnVehicle(city::ApproachId approach, city::MovementType movement, VehicleType type);
+
+    // 3D Rendering of active vehicles
+    void Render(gfx::Shader* sceneShader, gfx::Shader* emissiveShader);
+    void RenderShadowDepth(gfx::Shader* shadowShader);
 
     // Accessors
     const std::vector<std::unique_ptr<Vehicle>>& GetActiveVehicles() const { return m_vehicles; }
@@ -92,6 +103,9 @@ public:
     void SetPedestrianManager(ped::PedestrianManager* pm) { m_pedestrianManager = pm; }
     ped::PedestrianManager* GetPedestrianManager() { return m_pedestrianManager; }
 
+    using VehicleCompletedCallback = std::function<void(const Vehicle&)>;
+    void SetVehicleCompletedCallback(VehicleCompletedCallback cb) { m_onVehicleCompleted = cb; }
+
     const SimEngineConfig& GetConfig() const { return m_config; }
     SimEngineConfig& GetConfigMutable() { return m_config; }
     void SetConfig(const SimEngineConfig& cfg) { m_config = cfg; }
@@ -105,6 +119,10 @@ private:
     void UpdateVehicleDynamics(Vehicle* vehicle, float dt);
     void CheckCollisions();
 
+    void EnsureRenderingMeshes();
+    void DrawVehicle3D(const Vehicle* vehicle, gfx::Shader* sceneShader, gfx::Shader* emissiveShader);
+    void DrawVehicleShadow(const Vehicle* vehicle, gfx::Shader* shadowShader);
+
     VehicleType SampleVehicleType();
     city::MovementType SampleMovement();
 
@@ -112,6 +130,7 @@ private:
     std::shared_ptr<ISignalProvider> m_signalProvider;
     ped::PedestrianManager* m_pedestrianManager{ nullptr };
     ConflictManager m_conflictManager;
+    VehicleCompletedCallback m_onVehicleCompleted;
 
     SimEngineConfig m_config;
     std::unordered_map<VehicleType, VehicleDimensions> m_typeDimensions;
@@ -140,6 +159,10 @@ private:
     int m_totalCompleted{ 0 };
     int m_deferredSpawnsCount{ 0 };
     int m_collisionCount{ 0 };
+
+    // Procedural rendering meshes
+    std::unique_ptr<gfx::Mesh> m_cubeMesh;
+    std::unique_ptr<gfx::Mesh> m_wheelMesh;
 };
 
 } // namespace SmartCity::sim

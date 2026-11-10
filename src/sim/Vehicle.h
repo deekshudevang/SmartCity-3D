@@ -99,11 +99,11 @@ public:
     void SetRoute(const VehicleRoute& route);
 
     float GetDistanceAlongRoute() const { return m_distanceAlongRoute; }
-    void SetDistanceAlongRoute(float s) { m_distanceAlongRoute = s; }
+    void SetDistanceAlongRoute(float s);
 
     // Legacy alias
     float GetDistanceAlongPath() const { return m_distanceAlongRoute; }
-    void SetDistanceAlongPath(float d) { m_distanceAlongRoute = d; }
+    void SetDistanceAlongPath(float d) { SetDistanceAlongRoute(d); }
 
     float GetSpeed() const { return m_speed; }
     void SetSpeed(float s) { m_speed = s; }
@@ -128,6 +128,8 @@ public:
 
     bool HasReachedEnd() const { return m_reachedEnd; }
     float GetSpawnTime() const { return m_spawnTime; }
+    float GetWaitingTime() const { return m_waitingTime; }
+    void AddWaitingTime(float dt) { m_waitingTime += dt; }
 
     // 2D Oriented Bounding Box for SAT collision tests
     OrientedBoundingBox GetOBB() const;
@@ -160,6 +162,7 @@ private:
     VehiclePhysics m_physics;
     glm::vec4 m_color;
     float m_spawnTime;
+    float m_waitingTime{ 0.0f };
 
     float m_distanceAlongRoute;
     float m_speed;

@@ -1,12 +1,16 @@
 #include "sim/VehicleManager.h"
 #include "ped/PedestrianManager.h"
 #include "traffic/TrafficSignalController.h"
+#include "gfx/Shader.h"
+#include "gfx/Mesh.h"
 #include "core/Logger.h"
 #include <fstream>
 #include <sstream>
 #include <regex>
 #include <cmath>
 #include <algorithm>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace SmartCity::sim {
 
@@ -67,6 +71,8 @@ VehicleManager::VehicleManager(const city::RoadNetwork& roadNetwork,
     LoadConfig("assets/config/simulation.json", "assets/config/vehicles.json");
     Reset(m_config.randomSeed);
 }
+
+VehicleManager::~VehicleManager() = default;
 
 void VehicleManager::PrecomputeTurningLUTs() {
     m_turnLUTs.clear();
@@ -383,6 +389,33 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
                 }
             }
         }
+
+        // 4. Physical forward safety corridor inside intersection:
+        // construct a lookahead bounding box in front of vehicle to avoid T-bone / cut-off in intersection
+        if (s >= stopDist - 2.0f && s < exitDist + 5.0f) {
+            float lookaheadLen = std::max(v * 1.5f, 6.0f);
+            glm::vec2 vehCenter(vehicle->GetPosition().x, vehicle->GetPosition().z);
+            float h = vehicle->GetHeadingRad();
+            glm::vec2 fwdDir(std::sin(h), std::cos(h));
+            glm::vec2 boxCenter = vehCenter + fwdDir * (dims.length * 0.5f + lookaheadLen * 0.5f);
+            glm::vec2 boxHalfExt(lookaheadLen * 0.5f, dims.width * 0.45f);
+            OrientedBoundingBox safetyBox(boxCenter, boxHalfExt, h);
+
+            if (CheckSATOverlap(safetyBox, other->GetOBB())) {
+                // Obstacle in path! Determine physical gap along heading
+                glm::vec3 rel = other->GetPosition() - vehicle->GetPosition();
+                float fwdDist = glm::dot(rel, glm::vec3(fwdDir.x, 0.0f, fwdDir.y));
+                const auto& otherDims = other->GetDimensions();
+                float minRequiredFwd = dims.length * 0.5f + otherDims.length * 0.3f;
+                if (fwdDist > minRequiredFwd) {
+                    float physicalGap = std::max(fwdDist - (dims.length * 0.5f + otherDims.length * 0.5f), 0.1f);
+                    if (physicalGap < minNetGap) {
+                        minNetGap = physicalGap;
+                        leader = other.get();
+                    }
+                }
+            }
+        }
     }
 
     float accel = IDMController::CalculateFreeRoadAcceleration(effPhysics, v);
@@ -410,7 +443,8 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
         }
     }
 
-    if (frontBumperS < stopDist) {
+    bool atOrBeforeStop = (frontBumperS < stopDist + 1.0f);
+    if (atOrBeforeStop) {
         SignalAspect aspect = SignalAspect::Green;
         if (m_signalProvider) {
             aspect = m_signalProvider->GetState(route.approachId, route.movementType);
@@ -426,7 +460,7 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
         }
 
         // Conflict zone reservation
-        if (!mustStop && distToStopLine < 14.0f) {
+        if (!mustStop && distToStopLine < 20.0f) {
             bool reserved = m_conflictManager.RequestReservation(vehicle->GetId(), route.turningPathId,
                                                                  m_simTime, vehicle->IsEmergency());
             if (!reserved) {
@@ -438,9 +472,11 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
         if (mustStop) {
             float stopLineAccel = IDMController::CalculateStopLineAcceleration(physics, v, std::max(distToStopLine, 0.05f));
             accel = std::min(accel, stopLineAccel);
-            if (distToStopLine <= 0.2f && v < 0.1f) {
-                vehicle->SetSpeed(0.0f);
-                accel = std::min(accel, 0.0f);
+            if (distToStopLine <= 0.5f) {
+                if (v < 0.2f || distToStopLine <= 0.0f) {
+                    vehicle->SetSpeed(0.0f);
+                    accel = std::min(accel, 0.0f);
+                }
             }
         }
     }
@@ -496,8 +532,9 @@ void VehicleManager::UpdateVehicleDynamics(Vehicle* vehicle, float dt) {
     vehicle->SetAcceleration(accel);
     vehicle->Update(dt);
 
-    // Release reservations upon exiting the intersection into departure lane
-    if (vehicle->GetDistanceAlongRoute() >= exitDist) {
+    // Release reservations upon completely clearing the intersection into departure lane
+    float clearIntersectionDist = exitDist + dims.length * 0.5f + 1.0f;
+    if (vehicle->GetDistanceAlongRoute() >= clearIntersectionDist) {
         m_conflictManager.ReleaseReservation(vehicle->GetId());
         if (vehicle->IsEmergency() && m_signalProvider) {
             if (auto* ctrl = dynamic_cast<traffic::TrafficSignalController*>(m_signalProvider.get())) {
@@ -565,6 +602,9 @@ void VehicleManager::Step(float dt) {
         if (v->HasReachedEnd()) {
             m_conflictManager.ReleaseReservation(v->GetId());
             m_totalCompleted++;
+            if (m_onVehicleCompleted) {
+                m_onVehicleCompleted(*v);
+            }
             return true;
         }
         return false;
@@ -597,6 +637,169 @@ float VehicleManager::GetAverageSpeed() const {
         sum += v->GetSpeed();
     }
     return sum / static_cast<float>(m_vehicles.size());
+}
+
+void VehicleManager::EnsureRenderingMeshes() {
+    if (!m_cubeMesh) {
+        m_cubeMesh = gfx::Mesh::CreateCube(glm::vec3(1.0f), glm::vec4(1.0f));
+    }
+    if (!m_wheelMesh) {
+        m_wheelMesh = gfx::Mesh::CreateCylinder(0.35f, 0.25f, 16, glm::vec4(0.12f, 0.12f, 0.12f, 1.0f));
+    }
+}
+
+void VehicleManager::DrawVehicle3D(const Vehicle* vehicle, gfx::Shader* sceneShader, gfx::Shader* emissiveShader) {
+    const auto& dims = vehicle->GetDimensions();
+    glm::vec3 pos = vehicle->GetPosition();
+    float heading = vehicle->GetHeadingRad();
+
+    glm::mat4 base = glm::translate(glm::mat4(1.0f), pos);
+    base = glm::rotate(base, heading, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // 1. Main Chassis
+    glm::mat4 chassis = glm::translate(base, glm::vec3(0.0f, 0.0f, 0.0f));
+    chassis = glm::scale(chassis, glm::vec3(dims.width, dims.height * 0.45f, dims.length));
+    sceneShader->SetVec4("u_ColorOverride", vehicle->GetColor());
+    sceneShader->SetInt("u_UseColorOverride", 1);
+    sceneShader->SetMat4("u_Model", chassis);
+    m_cubeMesh->Draw();
+
+    // 2. Cabin / Roof (Dark tinted glass)
+    float cabinLength = (vehicle->GetType() == VehicleType::Bus) ? (dims.length * 0.85f) : (dims.length * 0.52f);
+    float cabinZOffset = (vehicle->GetType() == VehicleType::Bus) ? 0.0f : (-dims.length * 0.06f);
+    glm::mat4 cabin = glm::translate(base, glm::vec3(0.0f, dims.height * 0.36f, cabinZOffset));
+    cabin = glm::scale(cabin, glm::vec3(dims.width * 0.82f, dims.height * 0.42f, cabinLength));
+    sceneShader->SetVec4("u_ColorOverride", glm::vec4(0.12f, 0.16f, 0.22f, 1.0f));
+    sceneShader->SetMat4("u_Model", cabin);
+    m_cubeMesh->Draw();
+
+    // 3. Wheels
+    float wheelRadius = 0.35f;
+    float wheelY = -dims.height * 0.5f + wheelRadius;
+    float halfW = dims.width * 0.48f;
+    float axleZ = dims.length * 0.32f;
+
+    auto drawWheel = [&](float x, float z) {
+        glm::mat4 w = glm::translate(base, glm::vec3(x, wheelY, z));
+        w = glm::rotate(w, glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f));
+        w = glm::scale(w, glm::vec3(1.0f, 1.0f, 1.0f));
+        sceneShader->SetVec4("u_ColorOverride", glm::vec4(0.08f, 0.08f, 0.08f, 1.0f));
+        sceneShader->SetMat4("u_Model", w);
+        m_wheelMesh->Draw();
+    };
+
+    drawWheel(-halfW,  axleZ);
+    drawWheel( halfW,  axleZ);
+    drawWheel(-halfW, -axleZ);
+    drawWheel( halfW, -axleZ);
+
+    if (vehicle->GetType() == VehicleType::Bus) {
+        drawWheel(-halfW, -axleZ * 0.3f);
+        drawWheel( halfW, -axleZ * 0.3f);
+    }
+
+    // 4. Emissive lights (Headlights, Taillights, Emergency Siren)
+    if (emissiveShader) {
+        emissiveShader->Bind();
+
+        float lightY = 0.0f;
+        float frontZ = dims.length * 0.51f;
+        float backZ = -dims.length * 0.51f;
+        float lightSpacing = dims.width * 0.36f;
+
+        // Front Headlights (Warm white)
+        glm::vec4 headColor(1.0f, 0.96f, 0.85f, 1.0f);
+        emissiveShader->SetVec4("u_EmissiveColor", headColor);
+
+        glm::mat4 hlLeft = glm::translate(base, glm::vec3(-lightSpacing, lightY, frontZ));
+        hlLeft = glm::scale(hlLeft, glm::vec3(0.25f, 0.15f, 0.06f));
+        emissiveShader->SetMat4("u_Model", hlLeft);
+        m_cubeMesh->Draw();
+
+        glm::mat4 hlRight = glm::translate(base, glm::vec3(lightSpacing, lightY, frontZ));
+        hlRight = glm::scale(hlRight, glm::vec3(0.25f, 0.15f, 0.06f));
+        emissiveShader->SetMat4("u_Model", hlRight);
+        m_cubeMesh->Draw();
+
+        // Rear Taillights (Red)
+        glm::vec4 tailColor(0.95f, 0.08f, 0.08f, 1.0f);
+        emissiveShader->SetVec4("u_EmissiveColor", tailColor);
+
+        glm::mat4 tlLeft = glm::translate(base, glm::vec3(-lightSpacing, lightY, backZ));
+        tlLeft = glm::scale(tlLeft, glm::vec3(0.25f, 0.15f, 0.06f));
+        emissiveShader->SetMat4("u_Model", tlLeft);
+        m_cubeMesh->Draw();
+
+        glm::mat4 tlRight = glm::translate(base, glm::vec3(lightSpacing, lightY, backZ));
+        tlRight = glm::scale(tlRight, glm::vec3(0.25f, 0.15f, 0.06f));
+        emissiveShader->SetMat4("u_Model", tlRight);
+        m_cubeMesh->Draw();
+
+        // Emergency Siren Strobes
+        if (vehicle->IsEmergency()) {
+            bool flash = vehicle->GetSirenFlashState();
+            glm::vec4 redSiren = flash ? glm::vec4(1.0f, 0.05f, 0.05f, 1.0f) : glm::vec4(0.2f, 0.01f, 0.01f, 1.0f);
+            glm::vec4 blueSiren = (!flash) ? glm::vec4(0.05f, 0.4f, 1.0f, 1.0f) : glm::vec4(0.01f, 0.04f, 0.2f, 1.0f);
+
+            float sirenY = dims.height * 0.58f;
+            emissiveShader->SetVec4("u_EmissiveColor", redSiren);
+            glm::mat4 sLeft = glm::translate(base, glm::vec3(-0.35f, sirenY, 0.0f));
+            sLeft = glm::scale(sLeft, glm::vec3(0.35f, 0.15f, 0.35f));
+            emissiveShader->SetMat4("u_Model", sLeft);
+            m_cubeMesh->Draw();
+
+            emissiveShader->SetVec4("u_EmissiveColor", blueSiren);
+            glm::mat4 sRight = glm::translate(base, glm::vec3(0.35f, sirenY, 0.0f));
+            sRight = glm::scale(sRight, glm::vec3(0.35f, 0.15f, 0.35f));
+            emissiveShader->SetMat4("u_Model", sRight);
+            m_cubeMesh->Draw();
+        }
+
+        sceneShader->Bind();
+    }
+
+    sceneShader->SetInt("u_UseColorOverride", 0);
+}
+
+void VehicleManager::DrawVehicleShadow(const Vehicle* vehicle, gfx::Shader* shadowShader) {
+    const auto& dims = vehicle->GetDimensions();
+    glm::vec3 pos = vehicle->GetPosition();
+    float heading = vehicle->GetHeadingRad();
+
+    glm::mat4 base = glm::translate(glm::mat4(1.0f), pos);
+    base = glm::rotate(base, heading, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 chassis = glm::translate(base, glm::vec3(0.0f, 0.0f, 0.0f));
+    chassis = glm::scale(chassis, glm::vec3(dims.width, dims.height * 0.45f, dims.length));
+    shadowShader->SetMat4("u_Model", chassis);
+    m_cubeMesh->Draw();
+
+    float cabinLength = (vehicle->GetType() == VehicleType::Bus) ? (dims.length * 0.85f) : (dims.length * 0.52f);
+    float cabinZOffset = (vehicle->GetType() == VehicleType::Bus) ? 0.0f : (-dims.length * 0.06f);
+    glm::mat4 cabin = glm::translate(base, glm::vec3(0.0f, dims.height * 0.36f, cabinZOffset));
+    cabin = glm::scale(cabin, glm::vec3(dims.width * 0.82f, dims.height * 0.42f, cabinLength));
+    shadowShader->SetMat4("u_Model", cabin);
+    m_cubeMesh->Draw();
+}
+
+void VehicleManager::Render(gfx::Shader* sceneShader, gfx::Shader* emissiveShader) {
+    if (!sceneShader) return;
+    EnsureRenderingMeshes();
+
+    for (const auto& vehicle : m_vehicles) {
+        if (!vehicle || !vehicle->IsActive() || vehicle->HasReachedEnd()) continue;
+        DrawVehicle3D(vehicle.get(), sceneShader, emissiveShader);
+    }
+}
+
+void VehicleManager::RenderShadowDepth(gfx::Shader* shadowShader) {
+    if (!shadowShader) return;
+    EnsureRenderingMeshes();
+
+    for (const auto& vehicle : m_vehicles) {
+        if (!vehicle || !vehicle->IsActive() || vehicle->HasReachedEnd()) continue;
+        DrawVehicleShadow(vehicle.get(), shadowShader);
+    }
 }
 
 } // namespace SmartCity::sim

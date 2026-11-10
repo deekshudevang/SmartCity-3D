@@ -109,6 +109,11 @@ set(SMARTCITY_CORE_SOURCES
     src/ped/PedestrianManager.cpp
     src/fx/RainSystem.cpp
     src/gfx/GpuProfiler.cpp
+    src/algos/LineDrawing.cpp
+    src/algos/BezierCurve.cpp
+    src/algos/RayCasting.cpp
+    src/analytics/AnalyticsEngine.cpp
+    src/analytics/ExperimentRunner.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS
@@ -149,6 +154,11 @@ set(SMARTCITY_CORE_HEADERS
     src/ped/PedestrianManager.h
     src/fx/RainSystem.h
     src/gfx/GpuProfiler.h
+    src/algos/LineDrawing.h
+    src/algos/BezierCurve.h
+    src/algos/RayCasting.h
+    src/analytics/AnalyticsEngine.h
+    src/analytics/ExperimentRunner.h
 )
 
 add_library(SmartCityCore STATIC

@@ -31,7 +31,7 @@ public:
     bool HasConflictingReservation(int vehicleId, const std::string& pathId) const;
 
     // Deadlock timeout and cleanup
-    void Update(float currentTime, float timeoutSeconds = 15.0f);
+    void Update(float currentTime, float timeoutSeconds = 90.0f);
 
     void Reset();
 

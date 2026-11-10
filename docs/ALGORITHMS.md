@@ -407,3 +407,177 @@ To profile OpenGL rendering passes without inducing CPU-GPU synchronization stal
 - Ping-Pong Query Objects: Two query IDs (`queryID[0]`, `queryID[1]`) are maintained per profiled section ("Shadow Pass", "Main Scene Pass", "Skybox & FX Pass", "UI Pass").
 - Asynchronous Retrieval: In frame $N$, query $N$ records execution duration via `glBeginQuery(GL_TIME_ELAPSED)` / `glEndQuery(GL_TIME_ELAPSED)`, while results from frame $N-1$ are queried via `glGetQueryObjectui64v`.
 - Pipeline Independence: Eliminates `glFinish()` stalls, providing microsecond-accurate GPU execution timings on the Dear ImGui performance overlay.
+
+---
+
+## 10. Computer Graphics Algorithms & Mathematical Demonstrators (Phase 7)
+
+This section details the fundamental 2D and 3D computer graphics algorithms implemented in `SmartCity::algos` and `SmartCity::analytics`.
+
+---
+
+### 10.1 Line Rasterization: DDA vs. Bresenham's Integer Algorithm
+
+Given two integer endpoints $P_0(x_0, y_0)$ and $P_1(x_1, y_1)$ in screen/raster space:
+$$\Delta x = x_1 - x_0, \quad \Delta y = y_1 - y_0$$
+
+#### 1. Digital Differential Analyzer (DDA)
+The DDA algorithm solves the differential equation of a straight line by taking unit steps along the driving axis and calculating proportional increments along the passive axis:
+$$N = \max(|\Delta x|, |\Delta y|)$$
+$$\Delta x_{\text{step}} = \frac{\Delta x}{N}, \quad \Delta y_{\text{step}} = \frac{\Delta y}{N}$$
+
+For each step $k \in [0, N]$:
+$$x_{k+1} = x_k + \Delta x_{\text{step}}, \quad y_{k+1} = y_k + \Delta y_{\text{step}}$$
+The rasterized pixel is determined by rounding:
+$$\text{Pixel}_k = (\lfloor x_k + 0.5 \rfloor, \lfloor y_k + 0.5 \rfloor)$$
+
+*Computational Characteristics*: Requires floating-point division at setup and floating-point additions plus float-to-integer conversions per pixel. Prone to accumulative round-off errors over long line segments.
+
+#### 2. Bresenham's Integer Line Drawing Algorithm (All 8 Octants)
+Bresenham's algorithm utilizes only integer additions, subtractions, and bitwise shifts ($2 \cdot x = x \ll 1$), eliminating all floating-point math.
+
+##### Mathematical Derivation for Octant 0 ($0 \le \Delta y \le \Delta x$, $m \in [0, 1]$):
+At pixel $(x_k, y_k)$, the true continuous y-coordinate at $x_k + 1$ is:
+$$y = m(x_k + 1) + c$$
+The algorithm must choose between pixel $E(x_k + 1, y_k)$ and pixel $NE(x_k + 1, y_k + 1)$.
+The vertical distances from the true line to the candidate pixel centers are:
+$$d_1 = y - y_k = m(x_k + 1) + c - y_k$$
+$$d_2 = (y_k + 1) - y = y_k + 1 - m(x_k + 1) - c$$
+The distance difference determines which candidate is closer:
+$$d_1 - d_2 = 2m(x_k + 1) - 2y_k + 2c - 1$$
+Multiplying by $\Delta x > 0$ defines the integer decision variable $D_k$:
+$$D_k = \Delta x (d_1 - d_2) = 2\Delta y \cdot x_k - 2\Delta x \cdot y_k + C$$
+where $C = 2\Delta y + \Delta x(2c - 1)$.
+
+At the starting pixel $(x_0, y_0)$, since $y_0 = m x_0 + c \implies c = y_0 - \frac{\Delta y}{\Delta x} x_0$:
+$$D_0 = 2\Delta y - \Delta x$$
+
+The step-to-step recurrence relation is:
+$$D_{k+1} - D_k = 2\Delta y (x_{k+1} - x_k) - 2\Delta x (y_{k+1} - y_k)$$
+Since $x_{k+1} = x_k + 1$:
+- If $D_k < 0$: choose pixel $E(x_k + 1, y_k) \implies y_{k+1} = y_k$:
+  $$D_{k+1} = D_k + 2\Delta y$$
+- If $D_k \ge 0$: choose pixel $NE(x_k + 1, y_k + 1) \implies y_{k+1} = y_k + 1$:
+  $$D_{k+1} = D_k + 2(\Delta y - \Delta x)$$
+
+##### Generalization to All 8 Octants:
+The 8 octants of the 2D Cartesian plane are classified by the directional signs $s_x = \text{sgn}(\Delta x)$, $s_y = \text{sgn}(\Delta y)$ and the dominant axis condition:
+
+| Octant | Slope $m$ | $s_x$ | $s_y$ | Dominant Axis | Decision Variable $D_0$ | Step Choice ($D_k < 0$) | Step Choice ($D_k \ge 0$) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **0** | $[0, 1]$ | $+1$ | $+1$ | $X$ ($dx \ge dy$) | $2dy - dx$ | $x \mathrel{+}= 1, D \mathrel{+}= 2dy$ | $x \mathrel{+}= 1, y \mathrel{+}= 1, D \mathrel{+}= 2(dy - dx)$ |
+| **1** | $[1, \infty)$ | $+1$ | $+1$ | $Y$ ($dy > dx$) | $2dx - dy$ | $y \mathrel{+}= 1, D \mathrel{+}= 2dx$ | $x \mathrel{+}= 1, y \mathrel{+}= 1, D \mathrel{+}= 2(dx - dy)$ |
+| **2** | $(-\infty, -1]$ | $-1$ | $+1$ | $Y$ ($dy > dx$) | $2dx - dy$ | $y \mathrel{+}= 1, D \mathrel{+}= 2dx$ | $x \mathrel{-}= 1, y \mathrel{+}= 1, D \mathrel{+}= 2(dx - dy)$ |
+| **3** | $[-1, 0]$ | $-1$ | $+1$ | $X$ ($dx \ge dy$) | $2dy - dx$ | $x \mathrel{-}= 1, D \mathrel{+}= 2dy$ | $x \mathrel{-}= 1, y \mathrel{+}= 1, D \mathrel{+}= 2(dy - dx)$ |
+| **4** | $[0, 1]$ | $-1$ | $-1$ | $X$ ($dx \ge dy$) | $2dy - dx$ | $x \mathrel{-}= 1, D \mathrel{+}= 2dy$ | $x \mathrel{-}= 1, y \mathrel{-}= 1, D \mathrel{+}= 2(dy - dx)$ |
+| **5** | $[1, \infty)$ | $-1$ | $-1$ | $Y$ ($dy > dx$) | $2dx - dy$ | $y \mathrel{-}= 1, D \mathrel{+}= 2dx$ | $x \mathrel{-}= 1, y \mathrel{-}= 1, D \mathrel{+}= 2(dx - dy)$ |
+| **6** | $(-\infty, -1]$ | $+1$ | $-1$ | $Y$ ($dy > dx$) | $2dx - dy$ | $y \mathrel{-}= 1, D \mathrel{+}= 2dx$ | $x \mathrel{+}= 1, y \mathrel{-}= 1, D \mathrel{+}= 2(dx - dy)$ |
+| **7** | $[-1, 0]$ | $+1$ | $-1$ | $X$ ($dx \ge dy$) | $2dy - dx$ | $x \mathrel{+}= 1, D \mathrel{+}= 2dy$ | $x \mathrel{+}= 1, y \mathrel{-}= 1, D \mathrel{+}= 2(dy - dx)$ |
+
+---
+
+### 10.2 Parametric Bézier Curves: De Casteljau, Derivatives & Curvature
+
+Given four 3D control points $\mathbf{P}_0, \mathbf{P}_1, \mathbf{P}_2, \mathbf{P}_3 \in \mathbb{R}^3$ defining a turning path in the intersection:
+
+#### 1. Explicit Bernstein Polynomial Formulation
+$$\mathbf{B}(t) = \sum_{i=0}^3 B_{i, 3}(t) \mathbf{P}_i = (1-t)^3 \mathbf{P}_0 + 3(1-t)^2 t \mathbf{P}_1 + 3(1-t) t^2 \mathbf{P}_2 + t^3 \mathbf{P}_3, \quad t \in [0, 1]$$
+
+#### 2. De Casteljau Recursive Algorithm
+Computes $\mathbf{B}(t)$ through geometrically stable successive affine combinations:
+$$\mathbf{P}_i^{(0)} = \mathbf{P}_i \quad (i = 0, 1, 2, 3)$$
+$$\mathbf{P}_i^{(k)}(t) = (1-t)\mathbf{P}_i^{(k-1)}(t) + t \mathbf{P}_{i+1}^{(k-1)}(t) \quad (k = 1, 2, 3; \, i = 0, \dots, 3-k)$$
+$$\mathbf{B}(t) = \mathbf{P}_0^{(3)}(t)$$
+
+*Verification*: In `SmartCity::algos::BezierCurveEvaluator::VerifyFormulationsAgreement`, points evaluated via De Casteljau and Bernstein polynomials agree within machine epsilon:
+$$\max_{t \in [0, 1]} \|\mathbf{B}_{\text{DeCasteljau}}(t) - \mathbf{B}_{\text{Bernstein}}(t)\| < 1.0 \times 10^{-6}\text{ m}$$
+
+#### 3. Analytical First Derivative (Velocity / Tangent Vector)
+$$\mathbf{B}'(t) = \frac{d\mathbf{B}(t)}{dt} = 3(1-t)^2 (\mathbf{P}_1 - \mathbf{P}_0) + 6(1-t)t (\mathbf{P}_2 - \mathbf{P}_1) + 3t^2 (\mathbf{P}_3 - \mathbf{P}_2)$$
+The instantaneous unit tangent $\hat{\mathbf{T}}(t)$ and road heading $\theta(t)$ are:
+$$\hat{\mathbf{T}}(t) = \frac{\mathbf{B}'(t)}{\|\mathbf{B}'(t)\|}, \quad \theta(t) = \text{atan2}(B'_x(t), B'_z(t))$$
+
+#### 4. Analytical Second Derivative (Acceleration Vector)
+$$\mathbf{B}''(t) = \frac{d^2\mathbf{B}(t)}{dt^2} = 6(1-t)(\mathbf{P}_2 - 2\mathbf{P}_1 + \mathbf{P}_0) + 6t(\mathbf{P}_3 - 2\mathbf{P}_2 + \mathbf{P}_1)$$
+
+#### 5. Differential Curvature & Turn Radius
+The signed 3D curvature $\kappa(t)$ and minimum radius of curvature $R(t)$ along the trajectory are:
+$$\kappa(t) = \frac{\|\mathbf{B}'(t) \times \mathbf{B}''(t)\|}{\|\mathbf{B}'(t)\|^3}, \quad R(t) = \frac{1}{\kappa(t)}$$
+Highway engineering standards require $R(t) \ge 8.0\text{ m}$ for passenger vehicles at urban intersections to prevent lateral skidding.
+
+#### 6. Arc Length Parameterization
+Because $\|\mathbf{B}'(t)\|$ is non-constant, advancing $t$ linearly does not yield constant vehicle speed. The arc-length function is:
+$$s(t) = \int_0^t \|\mathbf{B}'(u)\| du$$
+A precomputed Lookup Table (LUT) of $N = 200$ samples discretizes $s_i = s(t_i)$. For a requested distance along path $s$, the exact parameter $t$ is retrieved via binary search and linear interpolation:
+$$t(s) = t_i + \frac{s - s_i}{s_{i+1} - s_i} (t_{i+1} - t_i)$$
+guaranteeing exact kinematic velocity compliance $v = \frac{ds}{dt_{\text{sim}}}$.
+
+---
+
+### 10.3 Ray Casting & 3D Spatial Intersection Tests
+
+#### 1. Screen-to-World Ray Unprojection
+Given mouse viewport coordinates $(x_s, y_s)$, viewport dimensions $(w, h)$, and the composite camera matrix $\mathbf{M} = \mathbf{P} \cdot \mathbf{V}$:
+Normalized device coordinates (NDC) with $Y$ inverted (OpenGL origin at bottom-left):
+$$x_{\text{ndc}} = \frac{2 x_s}{w} - 1.0, \quad y_{\text{ndc}} = 1.0 - \frac{2 y_s}{h}$$
+
+Inverse View-Projection Matrix:
+$$\mathbf{M}_{\text{inv}} = (\mathbf{P} \cdot \mathbf{V})^{-1}$$
+
+Transform near and far clip plane points:
+$$\mathbf{p}'_{\text{near}} = \mathbf{M}_{\text{inv}} \cdot \begin{bmatrix} x_{\text{ndc}} \\ y_{\text{ndc}} \\ -1.0 \\ 1.0 \end{bmatrix}, \quad \mathbf{p}'_{\text{far}} = \mathbf{M}_{\text{inv}} \cdot \begin{bmatrix} x_{\text{ndc}} \\ y_{\text{ndc}} \\ 1.0 \\ 1.0 \end{bmatrix}$$
+Homogeneous perspective divide:
+$$\mathbf{p}_{\text{near}} = \frac{\mathbf{p}'_{\text{near}, xyz}}{\mathbf{p}'_{\text{near}, w}}, \quad \mathbf{p}_{\text{far}} = \frac{\mathbf{p}'_{\text{far}, xyz}}{\mathbf{p}'_{\text{far}, w}}$$
+
+- **Perspective Projection**:
+  $$\mathbf{o} = \mathbf{P}_{\text{cam}}, \quad \mathbf{d} = \text{normalize}(\mathbf{p}_{\text{far}} - \mathbf{p}_{\text{near}})$$
+- **Orthographic Projection**:
+  $$\mathbf{o} = \mathbf{p}_{\text{near}}, \quad \mathbf{d} = -\mathbf{F}_{\text{cam}} \quad (\text{constant forward direction})$$
+
+#### 2. Ray-AABB Intersection: Kay-Kajiya Slab Method
+For an Axis-Aligned Bounding Box defined by $[\mathbf{b}_{\min}, \mathbf{b}_{\max}]$ and a 3D ray $\mathbf{r}(t) = \mathbf{o} + t \mathbf{d}$:
+For each dimension $i \in \{x, y, z\}$:
+$$t_{1, i} = \frac{b_{\min, i} - o_i}{d_i}, \quad t_{2, i} = \frac{b_{\max, i} - o_i}{d_i}$$
+$$t_{\min, i} = \min(t_{1, i}, t_{2, i}), \quad t_{\max, i} = \max(t_{1, i}, t_{2, i})$$
+
+The global intersection interval is the intersection of all 3 slabs:
+$$t_{\text{enter}} = \max(t_{\min, x}, t_{\min, y}, t_{\min, z})$$
+$$t_{\text{exit}} = \min(t_{\max, x}, t_{\max, y}, t_{\max, z})$$
+
+*Intersection Condition*: The ray hits the AABB if and only if:
+$$t_{\text{enter}} \le t_{\text{exit}} \quad \text{and} \quad t_{\text{exit}} \ge 0$$
+The hit distance is $t = t_{\text{enter}} > 0 ? t_{\text{enter}} : t_{\text{exit}}$.
+
+#### 3. Ray-OBB Intersection via Local Space Transformation
+For an Oriented Bounding Box with center $\mathbf{C}$, orthonormal orientation axes $\mathbf{U} = [\hat{\mathbf{u}}_0 \mid \hat{\mathbf{u}}_1 \mid \hat{\mathbf{u}}_2]$, and half-extents $\mathbf{e}$:
+The ray origin $\mathbf{o}$ and direction $\mathbf{d}$ are transformed into the local coordinate frame of the OBB:
+$$\mathbf{o}_{\text{local}} = \mathbf{U}^T (\mathbf{o} - \mathbf{C}), \quad \mathbf{d}_{\text{local}} = \mathbf{U}^T \mathbf{d}$$
+The test reduces directly to the Ray-AABB Kay-Kajiya slab test against $[-\mathbf{e}, +\mathbf{e}]$ in local space. If a hit occurs at distance $t$, the surface normal $\hat{\mathbf{n}}_{\text{local}}$ is rotated back to world space:
+$$\hat{\mathbf{n}}_{\text{world}} = \mathbf{U} \cdot \hat{\mathbf{n}}_{\text{local}}$$
+
+---
+
+### 10.4 Traffic Dynamics: Akçelik Fuel & Emissions Model
+
+Vehicle fuel consumption and greenhouse gas emissions are calculated using the physically derived Akçelik Tractive Power Model (ARRB / Highway Capacity Manual):
+
+#### 1. Instantaneous Wheel Power Demand
+$$P_{\text{wheels}} = \max\left(0, \left(m \cdot a + R_{\text{aero}} + R_{\text{roll}}\right) \cdot v\right) \quad (\text{kW})$$
+- Aerodynamic drag force: $R_{\text{aero}} = \frac{1}{2} \rho_{\text{air}} C_d A v^2$ (with $\rho_{\text{air}} = 1.205\text{ kg/m}^3$)
+- Rolling resistance force: $R_{\text{roll}} = m \cdot g \cdot C_{rr}$ (with $C_{rr} = 0.015$, $g = 9.81\text{ m/s}^2$)
+
+#### 2. Fuel Consumption Rate
+$$f_t = \begin{cases}
+\alpha, & \text{if } P_{\text{wheels}} = 0 \text{ (idling, deceleration, or braking)} \\
+\alpha + \beta_1 P_{\text{wheels}} + \beta_2 m a^2 v, & \text{if } P_{\text{wheels}} > 0 \text{ (positive tractive acceleration)}
+\end{cases}$$
+where:
+- $\alpha \in [0.25, 0.90]\text{ mL/s}$: base engine idling fuel consumption rate
+- $\beta_1 \in [0.045, 0.080]\text{ mL/(kJ)}$: engine efficiency coefficient per unit work done
+- $\beta_2 \in [0.001, 0.003]\text{ mL/(kN}\cdot\text{m/s}^2)$: inertia and transient transmission loss factor
+
+#### 3. Carbon Dioxide ($\text{CO}_2$) Emissions
+Based on stoichiometric oxidation of hydrocarbon fuel:
+$$e_{\text{CO}_2}(t) = f_t \cdot \gamma_{\text{emission}} \quad (\text{g/s})$$
+where $\gamma_{\text{emission}} = 2.392\text{ g }\text{CO}_2/\text{mL}$ for gasoline and $2.640\text{ g }\text{CO}_2/\text{mL}$ for diesel.
+

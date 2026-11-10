@@ -102,7 +102,10 @@ bool ConflictManager::CanReserve(int vehicleId, const std::string& pathId, bool 
         auto it = m_reservations.find(zoneId);
         if (it != m_reservations.end()) {
             if (it->second.vehicleId != vehicleId) {
-                // Strict mutual exclusion: zone cannot be occupied by more than 1 vehicle at a time
+                // Emergency vehicles can preempt non-emergency reservations
+                if (isEmergency && !it->second.isEmergency) {
+                    continue;
+                }
                 return false;
             }
         }

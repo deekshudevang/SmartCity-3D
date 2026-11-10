@@ -139,3 +139,4 @@ void RainSystem::Render(const glm::mat4& viewProjection) {
 }
 
 } // namespace SmartCity::fx
+
