@@ -99,6 +99,11 @@ set(SMARTCITY_CORE_SOURCES
     src/sim/Vehicle.cpp
     src/sim/IDMController.cpp
     src/sim/TrafficManager.cpp
+    src/sim/OBB.cpp
+    src/sim/ISignalProvider.cpp
+    src/sim/ArcLengthLUT.cpp
+    src/sim/ConflictManager.cpp
+    src/sim/VehicleManager.cpp
 )
 
 set(SMARTCITY_CORE_HEADERS

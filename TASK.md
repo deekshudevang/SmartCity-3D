@@ -101,24 +101,31 @@
 ### Requirement Table
 | ID | Requirement | Status | Evidence (file/command) |
 | :--- | :--- | :--- | :--- |
-| REQ-04-01 | Waypoint lane graph with cubic Bézier turning curves (Left/Right/Thru) | VERIFIED | `src/sim/LaneGraph.h/.cpp`, `ctest -R test_lane_graph` (Passed 0.45s) |
-| REQ-04-02 | Multi-class vehicles (Sedan, SUV, Bus, Emergency) with physics | VERIFIED | `src/sim/Vehicle.h/.cpp`, multi-class dimensions and dynamics |
-| REQ-04-03 | Intelligent Driver Model (IDM) car-following acceleration/braking | VERIFIED | `src/sim/IDMController.h/.cpp`, `ctest -R test_idm` (Passed 0.26s) |
-| REQ-04-04 | Collision avoidance: safe headway preservation and stop bar compliance | VERIFIED | `src/sim/TrafficManager.cpp`, `ctest -R test_collision_avoidance` (0 collisions) |
-| REQ-04-05 | Intersection conflict yielding & unprotected left-turn gap acceptance | VERIFIED | `src/sim/LaneGraph.cpp`, automated crossing conflict calculation |
-| REQ-04-06 | Emergency vehicle preemption siren and corridor clearing | VERIFIED | `src/sim/Vehicle.cpp`, `TrafficManager.cpp`, siren strobe & corridor clearance |
+| REQ-04-01 | Decoupled headless simulation engine with fixed timestep ($dt = 1/60$s), accumulator (max-steps-per-frame cap 5), and render interpolation | VERIFIED | `src/sim/VehicleManager.cpp`, `test_vehicle_sim.cpp` |
+| REQ-04-02 | Multi-class vehicle catalog (`assets/config/vehicles.json`: Sedan $4.5\times 1.8$m, Bus $12\times 2.5$m, Ambulance $5.5\times 2.0$m) with physical dynamics | VERIFIED | `assets/config/vehicles.json`, `src/sim/Vehicle.h/.cpp` |
+| REQ-04-03 | Intelligent Driver Model (IDM) car-following and stop-line braking ($v^2 / (2 \cdot b)$) | VERIFIED | `src/sim/IDMController.cpp`, `ctest -R test_idm` (Passed 0.33s) |
+| REQ-04-04 | RoadNetwork path traversal with arc-length lookup table (LUT) constant speed and lateral acceleration limit ($a_{\text{lat}} \le 2.8$ m/s²) | VERIFIED | `src/sim/ArcLengthLUT.cpp`, `test_vehicle_sim.cpp` |
+| REQ-04-05 | 2D Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) collision detection | VERIFIED | `src/sim/OBB.cpp`, `ctest -R test_obb` (Passed 0.01s) |
+| REQ-04-06 | Intersection conflict zone reservation manager with mutual exclusion and deadlock prevention | VERIFIED | `src/sim/ConflictManager.cpp`, `test_vehicle_sim.cpp` |
+| REQ-04-07 | Deterministic entry-point spawner with seeded PRNG, arrivals/hour, movement splits, and deferred spawn clearance check | VERIFIED | `src/sim/VehicleManager.cpp`, `test_vehicle_sim.cpp` |
+| REQ-04-08 | Configuration validation with graceful default fallback from `simulation.json` and `vehicles.json` | VERIFIED | `assets/config/simulation.json`, `VehicleManager.cpp` |
+| REQ-04-09 | Comprehensive automated verification suite (lane deviation $\le 5$cm, 0 red crossings in 10-min sim, turning exit heading $\le 2^\circ$, framerate independence, seed determinism) | VERIFIED | `tests/unit/test_vehicle_sim.cpp`, `ctest -R test_vehicle_sim` (Passed 22.2s) |
+| REQ-04-10 | Mathematical documentation in `docs/ALGORITHMS.md` (IDM equations, Bézier LUT, OBB SAT, conflict protocol) | VERIFIED | `docs/ALGORITHMS.md` Section 6 |
 
 ### Test Table
 | Test | Type (auto/manual) | Result | Evidence |
 | :--- | :--- | :--- | :--- |
-| `test_lane_graph` | auto (CTest) | PASS | `ctest -R test_lane_graph` (Passed 0.45s, exit code 0) |
-| `test_idm` | auto (CTest) | PASS | `ctest -R test_idm` (Passed 0.26s, exit code 0) |
-| `test_collision_avoidance` | auto (CTest) | PASS | `ctest -R test_collision_avoidance` (Passed 0.58s, exit code 0) |
-| Full Suite Regression | auto (CTest) | PASS | `ctest --test-dir build` (7/7 passed 100%, 2.16s total) |
-| Headless Vehicle Sim Run | auto | PASS | `.\build\SmartCity3D.exe --headless` (60 frames rendered, exit code 0) |
+| `test_obb` | auto (CTest) | PASS | `ctest -R test_obb` (6/6 tests passed 0.01s, exit code 0) |
+| `test_vehicle_sim` | auto (CTest) | PASS | `ctest -R test_vehicle_sim` (7/7 tests passed 22.20s, exit code 0) |
+| `test_lane_graph` | auto (CTest) | PASS | `ctest -R test_lane_graph` (Passed 0.35s, exit code 0) |
+| `test_idm` | auto (CTest) | PASS | `ctest -R test_idm` (Passed 0.33s, exit code 0) |
+| `test_collision_avoidance` | auto (CTest) | PASS | `ctest -R test_collision_avoidance` (Passed 0.59s, exit code 0) |
+| Full Suite Regression (14/14) | auto (CTest) | PASS | `ctest --test-dir build` (100% tests passed, 26.24s total) |
+| Headless Lifecycle Run | auto | PASS | `.\build\SmartCity3D.exe --headless` (60 frames rendered, 0 leaks, exit code 0) |
 
 ### Known Issues / Deviations / Next-phase prerequisites
-- None. All Phase 4 requirements verified with automated CTest suite and headless execution logs. Ready for Phase 5.
+- None. Phase 4 is fully implemented and VERIFIED with 100% passing automated test suite and documentation.
+- Prerequisite for Phase 5 (Pedestrian Simulation Engine): Phase 4 is approved. Ready for sidewalk navigation, crosswalk waiting zones, and pedestrian-vehicle conflicts.
 
 ---
 

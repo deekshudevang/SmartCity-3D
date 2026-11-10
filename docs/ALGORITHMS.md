@@ -131,3 +131,101 @@ then the bounding box lies completely outside the frustum and is culled immediat
    For fragments below horizon ($\hat{d}_y < 0$):
    $$\mathbf{C}_{\text{sky}} = \text{mix}\left(\mathbf{C}_{\text{horizon}}, \mathbf{C}_{\text{ground}}, (-\hat{d}_y)^{0.5}\right)$$
 
+
+---
+
+## 6. Vehicle Simulation & Traffic Dynamics
+
+### 6.1 Intelligent Driver Model (IDM) Car-Following Formulation
+
+Longitudinal acceleration for each vehicle agent is governed by the continuous Intelligent Driver Model (Treiber et al.):
+
+$$\dot{v} = a \left[ 1 - \left(\frac{v}{v_0}\right)^\delta - \left(\frac{s^*(v, \Delta v)}{s}\right)^2 \right]$$
+
+where:
+- $v$: current vehicle speed ($\text{m/s}$)
+- $v_0$: desired free-flow velocity ($\text{m/s}$)
+- $a$: maximum acceleration limit ($\text{m/s}^2$)
+- $b$: comfortable deceleration rate ($\text{m/s}^2$)
+- $\delta$: free-acceleration exponent (standard $\delta = 4$)
+- $s$: net bumper-to-bumper distance to leader vehicle ($\text{m}$)
+- $\Delta v = v - v_{\text{lead}}$: closing speed relative to leader ($\text{m/s}$)
+
+The dynamic desired bumper-to-bumper gap $s^*(v, \Delta v)$ is computed as:
+
+$$s^*(v, \Delta v) = s_0 + v T + \frac{v \cdot \Delta v}{2 \sqrt{a \cdot b}}$$
+
+where $s_0$ is the minimum jam distance at standstill and $T$ is the safe time headway.
+
+#### Virtual Stop-Line Deceleration
+When approaching a red signal, yellow signal outside the dilemma zone, or an unreserved conflict zone, the stop bar acts as a virtual stationary obstacle ($v_{\text{lead}} = 0$, $\Delta v = v$):
+
+$$s_{\text{stop}}^*(v) = s_0 + v T + \frac{v^2}{2\sqrt{a \cdot b}}$$
+
+#### Yellow Light Dilemma Zone Evaluation
+A vehicle evaluates whether it can comfortably stop before the stop bar without exceeding maximum comfortable deceleration:
+
+$$d_{\text{min, stop}} = \frac{v^2}{2 \cdot b}$$
+
+If distance to stop bar $d_{\text{stop}} < d_{\text{min, stop}} + v \cdot t_{\text{reaction}}$, the vehicle is inside the dilemma zone and proceeds through the intersection safely.
+
+---
+
+### 6.2 Arc-Length Parameterized Cubic Bézier Traversal
+
+Intersection turning movements are modeled by cubic Bézier curves:
+
+$$\mathbf{B}(t) = (1-t)^3 \mathbf{P}_0 + 3(1-t)^2 t \mathbf{P}_1 + 3(1-t) t^2 \mathbf{P}_2 + t^3 \mathbf{P}_3, \quad t \in [0, 1]$$
+
+#### Arc-Length Lookup Table (LUT) Inversion
+To enforce constant physical vehicle speed $v = \frac{ds}{dt}$ independent of polynomial parameterization non-linearities, a 100-segment lookup table discretizes cumulative arc length:
+
+$$s_k = \sum_{i=1}^k \|\mathbf{B}(t_i) - \mathbf{B}(t_{i-1})\|$$
+
+Given an integrated physical distance $s \in [0, s_N]$, the curve parameter $t$ is retrieved in $O(\log N)$ via binary search:
+
+$$t(s) = t_k + \frac{s - s_k}{s_{k+1} - s_k} (t_{k+1} - t_k)$$
+
+#### Lateral Acceleration Constraint
+Vehicle velocity during turning maneuvers is dynamically constrained by lateral acceleration limits:
+
+$$a_{\text{lat}} = v^2 \cdot \kappa \le a_{\text{lat, limit}}$$
+
+where planar curve curvature $\kappa(t)$ is derived analytically from first and second derivatives:
+
+$$\kappa(t) = \frac{|x'(t) z''(t) - z'(t) x''(t)|}{\left(x'(t)^2 + z'(t)^2\right)^{3/2}}$$
+
+The maximum permissible cornering speed is:
+
+$$v_{\text{turn, max}} = \sqrt{\frac{a_{\text{lat, limit}}}{\max(\kappa(t), \epsilon)}}$$
+
+Vehicles decelerate prior to entering the curve to guarantee that $a_{\text{lat}} \le a_{\text{lat, limit}} = 2.8\text{ m/s}^2$ everywhere.
+
+---
+
+### 6.3 2D Oriented Bounding Box (OBB) & Separating Axis Theorem (SAT)
+
+Every vehicle maintains a 2D Oriented Bounding Box in the ground XZ plane defined by center $\mathbf{c} \in \mathbb{R}^2$, half-extents $\mathbf{e} = (L/2, W/2)$, and orthonormal orientation axes:
+
+$$\hat{\mathbf{u}}_{\text{long}} = (\sin\theta, \cos\theta), \quad \hat{\mathbf{u}}_{\text{lat}} = (\cos\theta, -\sin\theta)$$
+
+Collision detection between two boxes $A$ and $B$ evaluates 4 potential separating axes ($\hat{\mathbf{u}}_{A, \text{long}}, \hat{\mathbf{u}}_{A, \text{lat}}, \hat{\mathbf{u}}_{B, \text{long}}, \hat{\mathbf{u}}_{B, \text{lat}}$). For each candidate axis $\hat{\mathbf{a}}$:
+
+$$\text{dist} = |(\mathbf{c}_B - \mathbf{c}_A) \cdot \hat{\mathbf{a}}|$$
+
+$$r_A = e_{A, \text{long}} |\hat{\mathbf{a}} \cdot \hat{\mathbf{u}}_{A, \text{long}}| + e_{A, \text{lat}} |\hat{\mathbf{a}} \cdot \hat{\mathbf{u}}_{A, \text{lat}}|$$
+
+$$r_B = e_{B, \text{long}} |\hat{\mathbf{a}} \cdot \hat{\mathbf{u}}_{B, \text{long}}| + e_{B, \text{lat}} |\hat{\mathbf{a}} \cdot \hat{\mathbf{u}}_{B, \text{lat}}|$$
+
+If $\text{dist} > r_A + r_B$ for any axis $\hat{\mathbf{a}}$, the boxes are separated. If no separating axis exists across all 4 directions, a geometric overlap is detected.
+
+---
+
+### 6.4 Intersection Conflict Zone Mutual Exclusion
+
+To prevent intersection side-swipes and broadside collisions, the intersection core is partitioned into conflict zones.
+- Vehicles request reservations on all conflict zones intersecting their turning trajectory prior to entering the intersection ($d_{\text{stop}} \le 14\text{ m}$).
+- A reservation is granted if and only if all required zones are currently unreserved by any other vehicle.
+- If any required zone is occupied, the vehicle halts at the stop line ($v = 0$, state `Waiting`).
+- Reservations are released when the rear bumper clears the intersection and enters the departure lane.
+- Mutual exclusion is guaranteed: $\forall t, \text{occupants}(\text{Zone}_k) \le 1$.
