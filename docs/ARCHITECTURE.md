@@ -186,3 +186,4 @@ Every frame executes through six sequential stages:
    - Child objects are owned by their respective parents via `std::shared_ptr<SceneObject>`.
    - `Transform::SetParent()` maintains raw back-pointers to parent transforms without circular ownership.
    - Clearing or destroying a `Scene` releases only the objects it holds without destroying shared models or textures in `ResourceManager`.
+

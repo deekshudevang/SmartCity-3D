@@ -115,6 +115,86 @@ void RoadMarkings::GenerateMarkings() {
         addStripe(x, x + dashLen,  laneDivX - 0.08f,  laneDivX + 0.08f, white);
     }
 
+    // 5. Turn Arrows Painted per Lane
+    auto addArrow = [&](float cx, float cz, float angleRad, int type) {
+        // type: 0 = Through, 1 = Left, 2 = Right
+        float cosA = std::cos(angleRad);
+        float sinA = std::sin(angleRad);
+        auto rotPt = [cx, cz, cosA, sinA](float lx, float lz) -> glm::vec3 {
+            float rx = lx * cosA - lz * sinA;
+            float rz = lx * sinA + lz * cosA;
+            return glm::vec3(cx + rx, 0.015f, cz + rz);
+        };
+
+        // Arrow stem
+        uint32_t b = static_cast<uint32_t>(vertices.size());
+        glm::vec3 s0 = rotPt(-0.15f, -1.8f);
+        glm::vec3 s1 = rotPt( 0.15f, -1.8f);
+        glm::vec3 s2 = rotPt( 0.15f,  0.5f);
+        glm::vec3 s3 = rotPt(-0.15f,  0.5f);
+
+        vertices.push_back({ s0, up, {0,0}, white });
+        vertices.push_back({ s1, up, {1,0}, white });
+        vertices.push_back({ s2, up, {1,1}, white });
+        vertices.push_back({ s3, up, {0,1}, white });
+
+        indices.push_back(b); indices.push_back(b+1); indices.push_back(b+2);
+        indices.push_back(b+2); indices.push_back(b+3); indices.push_back(b);
+
+        // Arrow head
+        uint32_t h = static_cast<uint32_t>(vertices.size());
+        glm::vec3 h0, h1, h2;
+        if (type == 0) { // Straight
+            h0 = rotPt(-0.6f, 0.4f);
+            h1 = rotPt( 0.6f, 0.4f);
+            h2 = rotPt( 0.0f, 1.8f);
+        } else if (type == 1) { // Left
+            h0 = rotPt(-0.6f, 0.0f);
+            h1 = rotPt(-0.6f, 1.2f);
+            h2 = rotPt(-1.6f, 0.6f);
+        } else { // Right
+            h0 = rotPt(0.6f, 0.0f);
+            h1 = rotPt(0.6f, 1.2f);
+            h2 = rotPt(1.6f, 0.6f);
+        }
+
+        vertices.push_back({ h0, up, {0,0}, white });
+        vertices.push_back({ h1, up, {1,0}, white });
+        vertices.push_back({ h2, up, {0.5f,1.0f}, white });
+
+        indices.push_back(h); indices.push_back(h+1); indices.push_back(h+2);
+    };
+
+    float arrowDist = stopLineDist + 8.0f;
+    float l0 = hw * 0.25f * 0.5f; // lane 0
+    float l1 = hw * 0.25f * 1.5f; // lane 1
+    float l2 = hw * 0.25f * 2.5f; // lane 2
+    float l3 = hw * 0.25f * 3.5f; // lane 3
+
+    // North Inbound (+Z forward)
+    addArrow( l0, -arrowDist, 0.0f, 1); // Left
+    addArrow( l1, -arrowDist, 0.0f, 0); // Straight
+    addArrow( l2, -arrowDist, 0.0f, 0); // Straight
+    addArrow( l3, -arrowDist, 0.0f, 2); // Right
+
+    // South Inbound (-Z forward)
+    addArrow(-l0,  arrowDist, glm::radians(180.0f), 1); // Left
+    addArrow(-l1,  arrowDist, glm::radians(180.0f), 0); // Straight
+    addArrow(-l2,  arrowDist, glm::radians(180.0f), 0); // Straight
+    addArrow(-l3,  arrowDist, glm::radians(180.0f), 2); // Right
+
+    // East Inbound (-X forward)
+    addArrow( arrowDist,  l0, glm::radians(90.0f), 1); // Left
+    addArrow( arrowDist,  l1, glm::radians(90.0f), 0); // Straight
+    addArrow( arrowDist,  l2, glm::radians(90.0f), 0); // Straight
+    addArrow( arrowDist,  l3, glm::radians(90.0f), 2); // Right
+
+    // West Inbound (+X forward)
+    addArrow(-arrowDist, -l0, glm::radians(270.0f), 1); // Left
+    addArrow(-arrowDist, -l1, glm::radians(270.0f), 0); // Straight
+    addArrow(-arrowDist, -l2, glm::radians(270.0f), 0); // Straight
+    addArrow(-arrowDist, -l3, glm::radians(270.0f), 2); // Right
+
     m_markingsMesh = std::make_unique<gfx::Mesh>(vertices, indices);
 }
 

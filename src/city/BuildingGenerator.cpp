@@ -1,4 +1,5 @@
 #include "city/BuildingGenerator.h"
+#include <glad/glad.h>
 
 namespace SmartCity::city {
 
@@ -98,13 +99,38 @@ void BuildingGenerator::GenerateCityBlocks() {
         addBox(roofBoxCenter, roofBoxSize, glm::vec4(0.35f, 0.36f, 0.38f, 1.0f));
     }
 
-    m_combinedBuildingsMesh = std::make_unique<gfx::Mesh>(vertices, indices);
+    if (glad_glGenVertexArrays != nullptr) {
+        m_combinedBuildingsMesh = std::make_unique<gfx::Mesh>(vertices, indices);
+    }
 }
 
 void BuildingGenerator::Draw() const {
     if (m_combinedBuildingsMesh) {
         m_combinedBuildingsMesh->Draw();
     }
+}
+
+bool BuildingGenerator::VerifyNoOverlap(float roadSidewalkHalfWidth) const {
+    for (const auto& b : m_buildings) {
+        float minX = b.position.x - b.size.x * 0.5f;
+        float maxX = b.position.x + b.size.x * 0.5f;
+        float minZ = b.position.z - b.size.z * 0.5f;
+        float maxZ = b.position.z + b.size.z * 0.5f;
+
+        // If the building bounds encroach within the road and sidewalk corridor
+        if (std::abs(minX) < roadSidewalkHalfWidth || std::abs(maxX) < roadSidewalkHalfWidth) {
+            // Only an overlap if it is along the active corridor
+            if (minX * maxX < 0.0f || (std::abs(b.position.x) < roadSidewalkHalfWidth)) {
+                return false;
+            }
+        }
+        if (std::abs(minZ) < roadSidewalkHalfWidth || std::abs(maxZ) < roadSidewalkHalfWidth) {
+            if (minZ * maxZ < 0.0f || (std::abs(b.position.z) < roadSidewalkHalfWidth)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 } // namespace SmartCity::city

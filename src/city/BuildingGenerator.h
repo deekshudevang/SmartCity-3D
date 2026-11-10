@@ -22,6 +22,8 @@ public:
     ~BuildingGenerator() = default;
 
     void Draw() const;
+    const std::vector<BuildingProps>& GetBuildings() const { return m_buildings; }
+    bool VerifyNoOverlap(float roadSidewalkHalfWidth = 18.0f) const;
 
 private:
     void GenerateCityBlocks();

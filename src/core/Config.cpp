@@ -105,6 +105,10 @@ bool ConfigManager::LoadIntersectionConfig(const std::string& path, Intersection
     std::string content = buffer.str();
 
     ExtractFloat(content, "road_width_m", outSettings.roadWidth);
+    ExtractFloat(content, "lane_width_m", outSettings.laneWidth);
+    ExtractFloat(content, "median_width_m", outSettings.medianWidth);
+    ExtractFloat(content, "turn_pocket_length_m", outSettings.turnPocketLength);
+    ExtractFloat(content, "stop_line_before_crosswalk_m", outSettings.stopLineBeforeCrosswalk);
     ExtractFloat(content, "approach_length_m", outSettings.approachLength);
     ExtractFloat(content, "sidewalk_width_m", outSettings.sidewalkWidth);
     ExtractFloat(content, "curb_height_m", outSettings.curbHeight);

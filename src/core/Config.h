@@ -37,14 +37,22 @@ struct SimulationSettings {
 };
 
 struct IntersectionSettings {
-    float roadWidth = 14.0f;       // 4 lanes @ 3.5m each
-    float approachLength = 80.0f;
-    float sidewalkWidth = 4.0f;
+    bool rightHandTraffic = true;
+    float laneWidth = 3.5f;
+    int numThroughLanes = 2;
+    float turnPocketLength = 30.0f;
+    float medianWidth = 1.5f;
     float curbHeight = 0.15f;
-    float cornerRadius = 6.0f;
-    float stopLineDistance = 13.0f;
-    float crosswalkDistance = 9.5f;
-    float crosswalkWidth = 3.0f;
+    float sidewalkWidth = 3.0f;
+    float crosswalkWidth = 4.0f;
+    float stopLineBeforeCrosswalk = 1.5f;
+    float approachLength = 120.0f;
+    float cornerRadius = 8.0f;
+    float crosswalkDistance = 14.0f;
+    float stopLineDistance = 19.5f;
+
+    // Backward-compatible fields
+    float roadWidth = 14.0f;
     int numLanesPerApproach = 4;
 };
 

@@ -156,6 +156,71 @@ void StreetFurniture::GenerateStructures() {
         addBox(treeVerts, treeInds, tp + glm::vec3(0.0f, 6.2f, 0.0f), glm::vec3(2.2f, 2.0f, 2.2f), foliageGreen * 1.15f);
     }
 
+    // 4. Urban Road Signs (Speed limit 50, No-U-Turn, Pedestrian Crossing)
+    glm::vec4 signPostColor(0.65f, 0.67f, 0.70f, 1.0f);
+    glm::vec4 signPlateWhite(0.95f, 0.95f, 0.95f, 1.0f);
+    glm::vec4 signPlateBlue(0.15f, 0.35f, 0.85f, 1.0f);
+    glm::vec4 signPlateRed(0.85f, 0.15f, 0.15f, 1.0f);
+
+    struct RoadSignDef {
+        glm::vec3 pos;
+        glm::vec4 plateColor;
+    };
+    std::vector<RoadSignDef> roadSigns = {
+        { {  curb + 0.8f, 0.0f, -22.0f }, signPlateWhite }, // North Speed Limit
+        { { -curb - 0.8f, 0.0f,  22.0f }, signPlateWhite }, // South Speed Limit
+        { {  22.0f, 0.0f,  curb + 0.8f }, signPlateBlue },  // East Pedestrian Crossing
+        { { -22.0f, 0.0f, -curb - 0.8f }, signPlateRed }   // West No-U-Turn
+    };
+
+    for (const auto& rs : roadSigns) {
+        addBox(poleVerts, poleInds, rs.pos + glm::vec3(0.0f, 1.3f, 0.0f), glm::vec3(0.08f, 2.6f, 0.08f), signPostColor);
+        addBox(housingVerts, housingInds, rs.pos + glm::vec3(0.0f, 2.3f, 0.0f), glm::vec3(0.65f, 0.65f, 0.04f), rs.plateColor);
+    }
+
+    // 5. Park Benches (Cast iron frames + wood slats)
+    std::vector<glm::vec3> benchPositions = {
+        {  curb + 2.0f, 0.15f, -16.0f },
+        { -curb - 2.0f, 0.15f,  16.0f },
+        {  16.0f, 0.15f,  curb + 2.0f },
+        { -16.0f, 0.15f, -curb - 2.0f }
+    };
+
+    for (const auto& bp : benchPositions) {
+        // Cast iron legs
+        addBox(poleVerts, poleInds, bp + glm::vec3(-0.8f, 0.25f, 0.0f), glm::vec3(0.08f, 0.5f, 0.45f), darkSteel);
+        addBox(poleVerts, poleInds, bp + glm::vec3( 0.8f, 0.25f, 0.0f), glm::vec3(0.08f, 0.5f, 0.45f), darkSteel);
+        // Cedar wood seat & backrest slats
+        addBox(treeVerts, treeInds, bp + glm::vec3(0.0f, 0.48f, 0.0f), glm::vec3(1.8f, 0.06f, 0.48f), woodBrown * 1.3f);
+        addBox(treeVerts, treeInds, bp + glm::vec3(0.0f, 0.80f, -0.2f), glm::vec3(1.8f, 0.35f, 0.06f), woodBrown * 1.3f);
+    }
+
+    // 6. Street Litter Bins
+    std::vector<glm::vec3> binPositions = {
+        {  curb + 2.0f, 0.15f, -18.5f },
+        { -curb - 2.0f, 0.15f,  18.5f },
+        {  18.5f, 0.15f,  curb + 2.0f },
+        { -18.5f, 0.15f, -curb - 2.0f }
+    };
+
+    for (const auto& binPos : binPositions) {
+        addBox(housingVerts, housingInds, binPos + glm::vec3(0.0f, 0.45f, 0.0f), glm::vec3(0.45f, 0.9f, 0.45f), darkSteel * 0.8f);
+    }
+
+    // 7. Transit Bus Stop Shelter (East approach sidewalk)
+    glm::vec3 busStopPos(32.0f, 0.15f, curb + 2.2f);
+    // Vertical steel columns
+    addBox(poleVerts, poleInds, busStopPos + glm::vec3(-2.2f, 1.4f, -0.8f), glm::vec3(0.1f, 2.8f, 0.1f), darkSteel);
+    addBox(poleVerts, poleInds, busStopPos + glm::vec3( 2.2f, 1.4f, -0.8f), glm::vec3(0.1f, 2.8f, 0.1f), darkSteel);
+    addBox(poleVerts, poleInds, busStopPos + glm::vec3(-2.2f, 1.4f,  0.8f), glm::vec3(0.1f, 2.8f, 0.1f), darkSteel);
+    addBox(poleVerts, poleInds, busStopPos + glm::vec3( 2.2f, 1.4f,  0.8f), glm::vec3(0.1f, 2.8f, 0.1f), darkSteel);
+    // Canopy roof
+    addBox(housingVerts, housingInds, busStopPos + glm::vec3(0.0f, 2.85f, 0.0f), glm::vec3(4.8f, 0.12f, 2.0f), glm::vec4(0.3f, 0.5f, 0.7f, 0.85f));
+    // Rear windscreen glass panel
+    addBox(housingVerts, housingInds, busStopPos + glm::vec3(0.0f, 1.4f, 0.8f), glm::vec3(4.3f, 2.4f, 0.06f), glm::vec4(0.55f, 0.75f, 0.85f, 0.75f));
+    // Interior waiting bench
+    addBox(treeVerts, treeInds, busStopPos + glm::vec3(0.0f, 0.45f, 0.35f), glm::vec3(3.2f, 0.08f, 0.45f), woodBrown * 1.2f);
+
     m_metalPolesMesh = std::make_unique<gfx::Mesh>(poleVerts, poleInds);
     m_signalHousingsMesh = std::make_unique<gfx::Mesh>(housingVerts, housingInds);
     m_treesMesh = std::make_unique<gfx::Mesh>(treeVerts, treeInds);

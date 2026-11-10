@@ -183,6 +183,13 @@ int Application::Run() {
     bool frustumCullingEnabled = true;
     bool useBlinnPhong = true;
 
+    // RoadNetwork Debug Overlay toggles (Phase 3)
+    bool showLaneCenters = false;
+    bool showTurningBeziers = false;
+    bool showConflictZones = false;
+    bool showStopLines = false;
+    bool showEntryExit = false;
+
     // Rolling 60-frame diagnostics window
     constexpr size_t ROLLING_WINDOW_SIZE = 60;
     float frameTimesMs[ROLLING_WINDOW_SIZE] = {};
@@ -234,6 +241,26 @@ int Application::Run() {
 
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             window.SetShouldClose(true);
+        }
+
+        // F1-F4 Camera Shortcuts (Phase 3)
+        if (Input::GetKeyDown(GLFW_KEY_F1)) {
+            camera.SetMode(gfx::CameraMode::FreeFly);
+        }
+        if (Input::GetKeyDown(GLFW_KEY_F2)) {
+            camera.ApplyPreset(gfx::CameraPreset::TopDown);
+            camera.SetProjectionType(gfx::ProjectionType::Orthographic);
+        }
+        if (Input::GetKeyDown(GLFW_KEY_F3)) {
+            camera.ApplyPreset(gfx::CameraPreset::Overview);
+            camera.SetProjectionType(gfx::ProjectionType::Perspective);
+        }
+        if (Input::GetKeyDown(GLFW_KEY_F4)) {
+            static int inspectIndex = 0;
+            inspectIndex = (inspectIndex + 1) % 2;
+            if (inspectIndex == 0) camera.ApplyPreset(gfx::CameraPreset::NorthTrafficCam);
+            else camera.ApplyPreset(gfx::CameraPreset::EastTrafficCam);
+            camera.SetProjectionType(gfx::ProjectionType::Perspective);
         }
 
         // Fixed-timestep simulation updates
@@ -314,6 +341,13 @@ int Application::Run() {
         city->Render(sceneShaderHandle.get(), emissiveShader.get(), nsSignal, ewSignal, nsLeft, ewLeft, nsPedWalk, ewPedWalk);
         traffic->Render(sceneShaderHandle.get(), emissiveShader.get());
 
+        // Draw Debug Overlays from real RoadNetwork data
+        if (showLaneCenters || showTurningBeziers || showConflictZones || showStopLines || showEntryExit) {
+            emissiveShader->Bind();
+            emissiveShader->SetMat4("u_ViewProjection", viewProj);
+            city->RenderDebugOverlay(emissiveShader.get(), showLaneCenters, showTurningBeziers, showConflictZones, showStopLines, showEntryExit);
+        }
+
         // Draw Skybox last with GL_LEQUAL depth func
         skybox->Draw(camera);
 
@@ -378,16 +412,49 @@ int Application::Run() {
                     }
                 }
 
-                ImGui::Text("Presets:");
-                if (ImGui::Button("Overview (45°)")) camera.ApplyPreset(gfx::CameraPreset::Overview);
+                ImGui::Text("Presets (Hotkeys: F1=Free, F2=Top-Down, F3=Overview, F4=Inspect):");
+                if (ImGui::Button("Overview [F3]")) {
+                    camera.ApplyPreset(gfx::CameraPreset::Overview);
+                    camera.SetProjectionType(gfx::ProjectionType::Perspective);
+                }
                 ImGui::SameLine();
-                if (ImGui::Button("Top-Down")) camera.ApplyPreset(gfx::CameraPreset::TopDown);
+                if (ImGui::Button("Top-Down [F2]")) {
+                    camera.ApplyPreset(gfx::CameraPreset::TopDown);
+                    camera.SetProjectionType(gfx::ProjectionType::Orthographic);
+                }
                 ImGui::SameLine();
-                if (ImGui::Button("North Cam")) camera.ApplyPreset(gfx::CameraPreset::NorthTrafficCam);
+                if (ImGui::Button("North Cam [F4]")) camera.ApplyPreset(gfx::CameraPreset::NorthTrafficCam);
 
+                if (ImGui::Button("Free Cam [F1]")) camera.SetMode(gfx::CameraMode::FreeFly);
+                ImGui::SameLine();
                 if (ImGui::Button("Pedestrian")) camera.ApplyPreset(gfx::CameraPreset::PedestrianView);
                 ImGui::SameLine();
                 if (ImGui::Button("East Cam")) camera.ApplyPreset(gfx::CameraPreset::EastTrafficCam);
+            }
+
+            // 3. ROADNETWORK & DEBUG OVERLAYS (PHASE 3)
+            if (ImGui::CollapsingHeader("RoadNetwork & Debug Overlays (Phase 3)", ImGuiTreeNodeFlags_DefaultOpen)) {
+                const auto& net = city->GetRoadNetwork();
+                ImGui::Text("Network Topology: 4 Approaches | %zu Lanes | %zu Paths",
+                            net.GetAllLanes().size(), net.GetAllPaths().size());
+                ImGui::Text("Conflict Zones: %zu | Stop Lines: %zu | Crosswalks: %zu",
+                            net.GetAllConflictZones().size(), net.GetAllStopLines().size(), net.GetAllCrosswalks().size());
+                ImGui::Separator();
+
+                ImGui::Text("Render Debug Overlays:");
+                ImGui::Checkbox("Lane Centrelines (Cyan)", &showLaneCenters);
+                ImGui::SameLine();
+                ImGui::Checkbox("Turning Béziers (Magenta)", &showTurningBeziers);
+
+                ImGui::Checkbox("Conflict Zones (Red)", &showConflictZones);
+                ImGui::SameLine();
+                ImGui::Checkbox("Stop Lines (Orange)", &showStopLines);
+
+                ImGui::Checkbox("Entry/Exit Points (Green/Amber)", &showEntryExit);
+
+                if (ImGui::Button("Export RoadNetwork JSON")) {
+                    net.SaveToJson("assets/config/network.json");
+                }
             }
 
             // 3. RESOURCE MANAGER STATUS

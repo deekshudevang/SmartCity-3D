@@ -93,6 +93,7 @@ set(SMARTCITY_CORE_SOURCES
     src/city/RoadMarkings.cpp
     src/city/BuildingGenerator.cpp
     src/city/StreetFurniture.cpp
+    src/city/RoadNetwork.cpp
     src/city/CityEnvironment.cpp
     src/sim/LaneGraph.cpp
     src/sim/Vehicle.cpp
